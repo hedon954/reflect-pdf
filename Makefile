@@ -3,19 +3,18 @@
 ## 首次使用：安装工具 + 生成 Xcode 项目
 setup:
 	@command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
-	@echo "→ 生成 Xcode 项目..."
-	xcodegen generate --spec project.yml --project ReflectPDF
-	@echo "→ 构建 Rust dylib..."
-	./scripts/build-rust.sh
+	@$(MAKE) gen-project
+	@$(MAKE) build-rust
 	@echo "✓ 准备就绪，可在 Xcode 打开 ReflectPDF/ReflectPDF.xcodeproj"
 
 ## 仅构建 Rust（日常开发中 Rust 有改动时使用）
 build-rust:
 	./scripts/build-rust.sh
 
-## 重新生成 Xcode 项目（project.yml 有改动时使用）
+## 重新生成 Xcode 项目（ReflectPDF/project.yml 有改动时使用）
 gen-project:
-	xcodegen generate --spec project.yml --project ReflectPDF
+	@echo "→ 生成 Xcode 项目..."
+	cd ReflectPDF && xcodegen generate
 
 ## 运行 Rust 单元测试
 test:

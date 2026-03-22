@@ -58,7 +58,7 @@ jobs:
 
       # ── 生成 Xcode 项目 ─────────────────────────────────────────────────────
       - name: Generate Xcode project
-        run: xcodegen generate --spec project.yml --project ReflectPDF
+        run: cd ReflectPDF && xcodegen generate
 
       # ── 构建 macOS App ──────────────────────────────────────────────────────
       - name: Select Xcode

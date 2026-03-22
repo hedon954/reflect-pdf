@@ -49,7 +49,7 @@ lipo -create \
 
 | 问题 | 解决 |
 |------|------|
-| `uniffi-bindgen not found` | `cargo install uniffi-bindgen-swift` |
+| `uniffi-bindgen not found` | `cd reflect-pdf-core && cargo build` 会自动编译 uniffi-bindgen binary |
 | Swift 报 `unresolved identifier` | 重新运行 `build-rust.sh`，确认 `Generated/` 已更新 |
 | `cargo clippy` 报错 | 先修 clippy 警告再构建（CI 会 `-D warnings`） |
 | dylib 签名问题 | 开发时不需要签名；发布时由 Xcode Archive 统一签名 |

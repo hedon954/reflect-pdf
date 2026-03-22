@@ -19,14 +19,19 @@ echo "→ [1/3] 构建 Rust ($TARGET, debug)..."
 cd "$CRATE_DIR"
 cargo build --target "$TARGET"
 
+# 使用 cargo metadata 获取实际的 target 目录（兼容 CARGO_TARGET_DIR 等自定义路径）
+TARGET_DIR="$(cargo metadata --no-deps --format-version 1 | python3 -c "import sys,json; print(json.load(sys.stdin)['target_directory'])")"
+DYLIB_PATH="$TARGET_DIR/$TARGET/debug/libreflect_pdf_core.dylib"
+
 echo "→ [2/3] 生成 UniFFI Swift 绑定..."
+echo "   dylib: $DYLIB_PATH"
 mkdir -p "$OUT_DIR"
 cargo run --bin uniffi-bindgen generate \
-    --library "target/$TARGET/debug/libreflect_pdf_core.dylib" \
+    --library "$DYLIB_PATH" \
     --language swift \
     --out-dir "$OUT_DIR"
 
 echo "→ [3/3] 复制 dylib..."
-cp "target/$TARGET/debug/libreflect_pdf_core.dylib" "$OUT_DIR/"
+cp "$DYLIB_PATH" "$OUT_DIR/"
 
 echo "✓ 完成。产物位于 ReflectPDF/Generated/"
