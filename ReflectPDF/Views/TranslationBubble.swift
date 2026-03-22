@@ -1,5 +1,24 @@
 import SwiftUI
 
+/// Pure-SwiftUI spinner — avoids the AppKit NSProgressIndicator AutoLayout
+/// constraint warning ("max length doesn't satisfy min <= max").
+private struct SpinnerView: View {
+    @State private var angle: Double = 0
+
+    var body: some View {
+        Circle()
+            .trim(from: 0.1, to: 0.9)
+            .stroke(Color.secondary, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            .frame(width: 14, height: 14)
+            .rotationEffect(.degrees(angle))
+            .onAppear {
+                withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
+                    angle = 360
+                }
+            }
+    }
+}
+
 struct TranslationBubble: View {
     let request: TranslationBubbleRequest
     let isLoading: Bool
@@ -67,7 +86,8 @@ struct TranslationBubble: View {
             if isLoading {
                 HStack {
                     ProgressView()
-                        .scaleEffect(0.7)
+                        .controlSize(.small)
+                        .frame(width: 16, height: 16)
                     Text("翻译中…")
                         .font(.callout)
                         .foregroundStyle(.secondary)
