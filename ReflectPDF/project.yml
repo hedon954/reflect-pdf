@@ -29,8 +29,10 @@ targets:
         INFOPLIST_FILE: Info.plist
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
         OTHER_LDFLAGS: "$(inherited) -lreflect_pdf_core"
-        LIBRARY_SEARCH_PATHS: "$(inherited) $(PROJECT_DIR)/Generated"
-        HEADER_SEARCH_PATHS: "$(inherited) $(PROJECT_DIR)/Generated"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
+        # 让 Swift 编译器找到 UniFFI 生成的 C 模块 (reflect_pdf_coreFFI)
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -fmodule-map-file=$(SRCROOT)/Generated/reflect_pdf_coreFFI.modulemap"
     entitlements:
       path: ReflectPDF.entitlements
       properties:
