@@ -28,12 +28,20 @@ struct PDFOutlineSidebarView: View {
     var body: some View {
         Group {
             if let root = document.outlineRoot, root.numberOfChildren > 0 {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        OutlineChildren(item: root, doc: document,
-                                        activePageIndex: activePageIndex, depth: 0)
+                ScrollViewReader { scrollProxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            OutlineChildren(item: root, doc: document,
+                                            activePageIndex: activePageIndex, depth: 0)
+                        }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
+                    .onChange(of: activePageIndex) { newIndex in
+                        guard newIndex >= 0 else { return }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            scrollProxy.scrollTo(newIndex, anchor: .center)
+                        }
+                    }
                 }
             } else {
                 VStack(spacing: 10) {
@@ -127,6 +135,8 @@ private struct OutlineRow: View {
                     : Color.clear,
                 in: RoundedRectangle(cornerRadius: 4)
             )
+            // ID used by ScrollViewReader to scroll to active item
+            .id(myPageIndex)
 
             if item.numberOfChildren > 0 && isExpanded {
                 OutlineChildren(item: item, doc: doc,

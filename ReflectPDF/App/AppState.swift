@@ -54,6 +54,10 @@ final class AppState: ObservableObject {
     }
 
     func openPDF(url: URL) {
+        // Save a security-scoped bookmark so we can re-open the file after app restart
+        // (needed when the app runs in a macOS sandbox).
+        saveBookmark(for: url)
+
         guard let doc = try? bridge.upsertPdfDocument(
             filePath: url.path,
             fileName: url.lastPathComponent,
@@ -61,6 +65,17 @@ final class AppState: ObservableObject {
         ) else { return }
         selectedDocument = doc
         refreshLibrary()
+    }
+
+    private func saveBookmark(for url: URL) {
+        // Try security-scoped bookmark first; fall back to plain bookmark.
+        let data = (try? url.bookmarkData(options: .withSecurityScope,
+                                          includingResourceValuesForKeys: nil,
+                                          relativeTo: nil))
+                ?? (try? url.bookmarkData())
+        if let data {
+            UserDefaults.standard.set(data, forKey: "bm_\(url.path)")
+        }
     }
 
     func removeFromLibrary(_ doc: PdfDocument) {
@@ -85,8 +100,7 @@ final class AppState: ObservableObject {
             kitDocument = nil
             return
         }
-        let url = URL(fileURLWithPath: filePath)
-        kitDocument = PDFKit.PDFDocument(url: url)
+        kitDocument = PDFKitView.loadDocument(filePath: filePath)
     }
 
     private func restoreLastDocument() {

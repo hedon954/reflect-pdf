@@ -5,8 +5,9 @@ struct TranslationBubble: View {
     let isLoading: Bool
     /// Returns the saved VocabularyEntry ID on success, or nil on failure.
     let onSave: (TranslationResult) -> String?
-    /// Called after the entry is deleted so the parent can refresh the vocab list.
-    let onDelete: () -> Void
+    /// Called after the entry is deleted; passes the deleted entry ID so the parent
+    /// can remove the corresponding PDF highlight annotation.
+    let onDelete: (String) -> Void
     let onDismiss: () -> Void
 
     @StateObject private var audio = AudioService()
@@ -177,7 +178,7 @@ struct TranslationBubble: View {
                     Button(role: .destructive) {
                         try? BridgeService.shared.deleteVocabulary(id: entryId)
                         savedEntryId = nil
-                        onDelete()
+                        onDelete(entryId)
                     } label: {
                         Image(systemName: "trash")
                             .foregroundStyle(.red)

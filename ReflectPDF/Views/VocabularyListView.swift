@@ -88,6 +88,16 @@ struct VocabularyListView: View {
 
     private func delete(_ entry: VocabularyEntry) {
         try? BridgeService.shared.deleteVocabulary(id: entry.id)
+        // Remove highlight annotation from the live PDFView
+        NotificationCenter.default.post(
+            name: .removeHighlight,
+            object: nil,
+            userInfo: [
+                "entryId": entry.id,
+                "pageIndex": Int(entry.pageIndex),
+                "filePath": entry.pdfPath
+            ]
+        )
         appState.refreshVocabulary()
     }
 
