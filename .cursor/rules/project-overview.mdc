@@ -1,0 +1,39 @@
+---
+description: ReflectPDF 项目总览：技术栈、架构分层、核心约束
+alwaysApply: true
+---
+
+# ReflectPDF 项目总览
+
+## 技术栈
+
+- **前端**: SwiftUI + PDFKit（macOS 13+）
+- **桥接**: Mozilla UniFFI（自动生成 Swift 绑定）
+- **后端**: Rust + Tokio + SQLite（rusqlite + r2d2）
+- **HTTP**: reqwest（LLM 调用 + MyMemory 兜底翻译）
+- **TTS**: AVSpeechSynthesizer（本地发音，Swift 侧，无需 Rust）
+
+## 架构分层（硬约束）
+
+```
+Swift UI  →  UniFFI 桥接  →  Rust interfaces  →  application  →  domain  ←  infrastructure
+```
+
+| 层 | 目录 | 约束 |
+|----|------|------|
+| Swift UI | `ReflectPDF/` | 不直接访问 DB、不发 HTTP |
+| Rust interfaces | `src/interfaces/` | 只做 UniFFI export + 依赖注入 |
+| Rust application | `src/application/` | 用例编排，不直接写 SQL/HTTP |
+| Rust domain | `src/domain/` | 零外部 I/O 依赖（无 reqwest/rusqlite） |
+| Rust infrastructure | `src/infrastructure/` | 实现 domain traits，不含业务逻辑 |
+
+## 关键文件
+
+- PRD: `docs/prd/prd-2026-03-22.md`
+- TDD: `docs/tdd/tdd-2026-03-22.md`
+- UniFFI 接口: `reflect-pdf-core/src/interfaces/reflect_pdf_lib.udl`
+- 构建脚本: `scripts/build-rust.sh`
+
+## 翻译降级策略
+
+本地缓存（SQLite）→ LLM（OpenAI 兼容）→ MyMemory API（兜底）

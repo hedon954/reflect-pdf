@@ -1,0 +1,45 @@
+---
+description: UniFFI 桥接规范：新增跨语言 API 的完整流程和注意事项
+globs: "**/{*.udl,api.rs}"
+alwaysApply: false
+---
+
+# UniFFI 桥接规范
+
+## 新增 API 的完整步骤
+
+1. **UDL 定义**（`src/interfaces/reflect_pdf_lib.udl`）：声明函数签名和数据类型
+2. **Rust 实现**（`src/interfaces/api.rs`）：加 `#[uniffi::export]` 并组装依赖
+3. **重新构建**：运行 `./scripts/build-rust.sh` 生成新的 Swift 绑定
+4. **Swift 封装**（`ReflectPDF/Services/BridgeService.swift`）：包装新 API
+
+## UDL 类型对照
+
+| UDL | Rust | Swift |
+|-----|------|-------|
+| `string` | `String` | `String` |
+| `string?` | `Option<String>` | `String?` |
+| `u32` | `u32` | `UInt32` |
+| `f64` | `f64` | `Double` |
+| `boolean` | `bool` | `Bool` |
+| `sequence<T>` | `Vec<T>` | `[T]` |
+| `dictionary Foo { ... }` | `#[uniffi::Record] struct Foo` | `struct Foo` |
+| `[Async]` | `async fn` | `async` Swift 函数 |
+| `[Throws=ReflectError]` | `Result<T, ReflectError>` | `throws` |
+
+## 注意事项
+
+- `dictionary` 中所有字段必须是 UniFFI 支持的类型（不支持裸 `HashMap`）
+- async 函数必须在 UDL 标注 `[Async]`，且 Rust 侧加 `#[uniffi::export(async_runtime = "tokio")]`
+- 错误枚举必须标注 `#[uniffi::Error]` 并在 UDL 声明 `[Error] enum`
+- 重新生成绑定后，`Generated/` 目录下文件**不要手动修改**
+
+## 全局状态（interfaces/api.rs）
+
+```rust
+static RUNTIME: OnceLock<Runtime> = OnceLock::new();
+static POOL:    OnceLock<DbPool>  = OnceLock::new();
+static CONFIG:  OnceLock<RwLock<Config>> = OnceLock::new();
+```
+
+新增 API 从这三个全局量获取运行时和配置，不要另起 Runtime。

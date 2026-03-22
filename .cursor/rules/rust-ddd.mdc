@@ -1,0 +1,123 @@
+---
+description: Rust DDD 分层规范：实体、Repository trait、应用层、基础设施层的编写约束
+globs: **/*.rs
+alwaysApply: false
+---
+
+# Rust DDD 规范
+
+## 分层原则
+
+### domain/ — 领域层（最严格）
+
+- **零外部 I/O 依赖**：`Cargo.toml` 中不得出现 `reqwest`、`rusqlite`、`r2d2`
+- 只定义实体（`entity.rs`）和 Repository/Translator trait（`repository.rs`）
+- 领域服务（`service.rs`）只依赖本层的 trait，不依赖具体实现
+
+```rust
+// ✅ 正确：domain 只知道 trait
+pub trait Translator: Send + Sync {
+    async fn translate(&self, word: &str, sentence: &str) -> Result<TranslationResult, ReflectError>;
+}
+
+// ❌ 错误：domain 直接用 reqwest
+use reqwest::Client; // 不允许出现在 domain/
+```
+
+### infrastructure/ — 基础设施层
+
+- 实现 domain 定义的 trait，**不包含业务规则**
+- SQLite repo 和 HTTP client 放在这里
+- 文件命名：`{domain_entity}_repo.rs`（如 `vocabulary_repo.rs`）
+
+### application/ — 应用层
+
+- 只做用例编排：接收请求 → 调用 domain service → 返回结果
+- 通过构造函数接收 `Arc<dyn SomeTrait>` 依赖，**不自己创建基础设施实例**
+
+### interfaces/ — 对外接口层
+
+- 只放 `#[uniffi::export]` 函数
+- 在这里做依赖注入（new 出具体实现，注入到 use case）
+- 持有全局 `OnceLock<DbPool>`、`OnceLock<Config>`
+
+## 领域层单元测试（强制）
+
+**domain/ 下每一个 `service.rs` 必须有对应的 `#[cfg(test)]` 模块，且不依赖任何外部 I/O。**
+
+### 测试用的 Fake 实现
+
+不使用 mockall，用内联 `struct Fake*` 实现 domain trait：
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    // Fake 缓存：内存 HashMap
+    struct FakeCache(Mutex<std::collections::HashMap<String, TranslationResult>>);
+    impl TranslationCacheRepository for FakeCache {
+        fn get(&self, word: &str, hash: &str) -> Result<Option<TranslationResult>, ReflectError> {
+            Ok(self.0.lock().unwrap().get(&format!("{word}:{hash}")).cloned())
+        }
+        fn set(&self, word: &str, hash: &str, r: &TranslationResult) -> Result<(), ReflectError> {
+            self.0.lock().unwrap().insert(format!("{word}:{hash}"), r.clone());
+            Ok(())
+        }
+    }
+
+    // Fake 翻译器：直接返回固定结果
+    struct FakeLlm;
+    #[async_trait::async_trait]
+    impl Translator for FakeLlm {
+        async fn translate(&self, word: &str, _: &str) -> Result<TranslationResult, ReflectError> {
+            Ok(TranslationResult { word: word.to_string(), source: "llm".to_string(), ..Default::default() })
+        }
+    }
+
+    // Fake 翻译器：始终失败
+    struct FailingLlm;
+    #[async_trait::async_trait]
+    impl Translator for FailingLlm {
+        async fn translate(&self, _: &str, _: &str) -> Result<TranslationResult, ReflectError> {
+            Err(ReflectError::LlmApiError("timeout".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn cache_hit_skips_llm() { /* ... */ }
+
+    #[tokio::test]
+    async fn llm_failure_falls_back() { /* ... */ }
+
+    #[tokio::test]
+    async fn successful_llm_result_is_cached() { /* ... */ }
+}
+```
+
+### 覆盖要求
+
+| 模块 | 必须测试的场景 |
+|------|--------------|
+| `translation/service.rs` | 缓存命中、LLM 成功写缓存、LLM 失败触发兜底、兜底不写缓存 |
+| `vocabulary/` 实体 | 值对象校验（如坐标合法性）|
+| `pdf_document/` 实体 | 滚动偏移范围（0.0–1.0）|
+
+CI 会单独运行 `cargo test domain` 验证覆盖，**任何 domain 测试失败都阻断合并**。
+
+## 错误处理
+
+- 统一使用 `crate::error::ReflectError`（thiserror 定义）
+- 用 `?` 传播，不用 `.unwrap()`（测试除外）
+- 跨语言的错误需标注 `#[uniffi::Error]`
+
+## 命名约定
+
+| 类型 | 命名 |
+|------|------|
+| 实体 | `VocabularyEntry`、`PdfDocument` |
+| Repository trait | `VocabularyRepository`、`PdfDocumentRepository` |
+| SQLite 实现 | `SqliteVocabularyRepo`、`SqlitePdfDocumentRepo` |
+| Use Case | `VocabularyUseCase`、`PdfDocumentUseCase` |
+| Domain Service | `TranslationDomainService` |
