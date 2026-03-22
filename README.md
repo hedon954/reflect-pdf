@@ -1,53 +1,71 @@
 # ReflectPDF
 
-> 为深度学习者设计的智能 PDF 阅读工具。像预览那样流畅，像人脑一样有上下文地理解每一个陌生词汇，并将知识以网状记忆永久沉淀。
+智能 PDF 阅读工具：像 macOS 预览一样流畅，支持**上下文感知翻译**和**知识永久沉淀**。
 
-## 核心特性
+## 核心功能
 
-- **上下文感知翻译**：划选词汇后，自动提取所在完整句子，由 LLM 解释"在当前语境中为什么是这个意思"，而非词典释义
-- **一键入册 + PDF 高亮**：翻译后点击保存，词汇 + 句子 + 解释三元组存入本地单词本，同时在 PDF 原文高亮
-- **网状记忆关联**：再次查同一词汇时，自动召回历史学习记录，并对比当前语境与历史语境的异同
-- **本地缓存，零重复调用**：点击已高亮词汇直接读取本地缓存，不消耗 API Token
-- **原生流畅体验**：基于 PDFKit，选词精准，对标 macOS 预览的渲染性能
+- **PDF 阅读**：基于 PDFKit，缩放、连续滚动，自动恢复上次阅读位置
+- **智能划词翻译**：提取所在完整句子 → LLM 给出语境解释，而非词典释义
+- **单词本**：保存词汇 + 句子 + 解释三元组，PDF 原文自动高亮
+- **发音**：系统本地 TTS，零延迟、离线可用
+- **三级降级**：本地缓存 → LLM → MyMemory 免费 API
 
 ## 技术架构
 
 ```
-SwiftUI + PDFKit（前端）
-        ↕ UniFFI（自动生成 Swift 绑定）
-Rust + Tokio + SQLite + Reqwest（后端）
+SwiftUI (PDFKit) ──UniFFI──▶ Rust (DDD) ──▶ SQLite
+                              ├── domain/       (实体 + Traits)
+                              ├── application/  (用例编排)
+                              └── infrastructure/ (SQLite + HTTP)
 ```
 
-- **前端**：Swift + PDFKit 负责 PDF 渲染、划词交互、高亮 Annotation
-- **桥接**：Mozilla UniFFI 自动生成类型安全的 Swift ↔ Rust 绑定
-- **后端**：Rust 负责缓存查询、LLM 调用、数据持久化
+## 快速开始
 
-## 文档
-
-- [产品需求文档 (PRD)](docs/prd/prd-2026-03-22.md)
-- [技术实现文档 (TDD)](docs/tdd/tdd-2026-03-22.md)
-
-## 开发环境
+**依赖**：macOS 13+、Xcode 15+、Rust stable、Homebrew
 
 ```bash
-# 安装 Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup target add aarch64-apple-darwin x86_64-apple-darwin
+# 首次设置（安装工具 + 构建 Rust + 生成 Xcode 项目）
+make setup
 
-# 安装 UniFFI Swift 绑定生成工具
-cargo install uniffi-bindgen-swift
-
-# 构建 Rust 后端并生成 Swift 绑定
-./scripts/build-rust.sh
+# 然后在 Xcode 打开
+open ReflectPDF/ReflectPDF.xcodeproj
 ```
 
-需要 Xcode 14.0+ 和 macOS 13.0+。
+## 日常开发
 
-## 版本规划
+```bash
+make build-rust      # Rust 代码有改动时
+make test            # 运行 Rust 单元测试
+make gen-project     # project.yml 有改动时重新生成 Xcode 项目
+```
 
-| 版本 | 主要功能 |
-|------|---------|
-| V1.0 (MVP) | PDF 渲染、上下文 AI 翻译、保存高亮、本地缓存 |
-| V1.1 | 历史记忆召回与差异分析、单词本视图、全文搜索 |
-| V1.2 | 遗忘曲线复习、Anki 导出 |
-| V2.0 | 知识图谱可视化、iCloud 同步 |
+## 设置 LLM
+
+启动 App 后进入「设置」页面：
+- **API Base URL**：OpenAI 兼容接口地址（默认 `https://api.openai.com/v1`）
+- **API Key**：存储在系统 Keychain，不会写入磁盘
+- **模型**：默认 `gpt-4o-mini`
+
+## 项目结构
+
+```
+reflect-pdf/
+├── reflect-pdf-core/      Rust 后端（DDD）
+│   └── src/
+│       ├── interfaces/    UniFFI 导出
+│       ├── application/   用例层
+│       ├── domain/        领域层（纯逻辑，无 I/O）
+│       └── infrastructure/ SQLite + HTTP 实现
+├── ReflectPDF/            Swift 前端
+│   ├── App/
+│   ├── Views/
+│   ├── Services/
+│   └── Generated/         UniFFI 自动生成（勿手改）
+├── scripts/build-rust.sh  Rust 构建脚本
+├── project.yml            xcodegen 配置
+└── Makefile
+```
+
+## 数据存储
+
+所有数据本地存储于 `~/Library/Application Support/ReflectPDF/data.db`（SQLite），API Key 存 Keychain。

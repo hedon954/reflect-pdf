@@ -37,21 +37,20 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
-      # 领域层单元测试（无 I/O 依赖，必须 100% 通过）
-      - name: test - domain (no I/O)
-        run: cargo test domain --all-features -- --nocapture
+      # Domain 层单元测试（无 I/O 依赖，必须 100% 通过）
+      - name: test domain
+        run: cargo test domain -- --nocapture
 
-      # 全量测试（含 integration tests）
-      - name: test - all
-        run: cargo test --all-features
+      - name: test all
+        run: cargo test
 
   # ─── Swift / Xcode checks ───────────────────────────────────────────────────
   swift:
     name: Swift (build check)
     runs-on: macos-latest
-    needs: rust   # Swift 依赖 Rust dylib，先跑 Rust
+    needs: rust
 
     steps:
       - uses: actions/checkout@v4
@@ -66,11 +65,14 @@ jobs:
         with:
           workspaces: reflect-pdf-core
 
-      - name: Install uniffi-bindgen-swift
-        run: cargo install uniffi-bindgen-swift
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       - name: Build Rust dylib + generate Swift bindings
         run: ./scripts/build-rust.sh
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml --project ReflectPDF
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
@@ -83,6 +85,4 @@ jobs:
             -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty
-        # xcpretty 可选，没装时删掉 "| xcpretty" 即可
+            CODE_SIGNING_ALLOWED=NO

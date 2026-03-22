@@ -1,0 +1,24 @@
+# Rust
+/reflect-pdf-core/target/
+Cargo.lock
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/contents.xcworkspacedata
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Generated UniFFI bindings (rebuilt by build-rust.sh)
+ReflectPDF/Generated/
+
+# macOS
+.DS_Store
+*.swp
+
+# Env / secrets
+.env
+*.pem

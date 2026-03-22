@@ -1,0 +1,49 @@
+name: ReflectPDF
+# xcodegen generate --spec project.yml --project ReflectPDF
+options:
+  bundleIdPrefix: com.reflectpdf
+  deploymentTarget:
+    macOS: "13.0"
+  defaultConfig: Debug
+  xcodeVersion: "15"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  ReflectPDF:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: ReflectPDF
+        excludes:
+          - "Generated/**"
+      - path: ReflectPDF/Generated
+        optional: true
+    settings:
+      base:
+        PRODUCT_NAME: ReflectPDF
+        PRODUCT_BUNDLE_IDENTIFIER: com.reflectpdf.app
+        INFOPLIST_FILE: ReflectPDF/Info.plist
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        OTHER_LDFLAGS: "$(inherited) -lreflect_pdf_core"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(PROJECT_DIR)/ReflectPDF/Generated"
+        HEADER_SEARCH_PATHS: "$(inherited) $(PROJECT_DIR)/ReflectPDF/Generated"
+        SWIFT_OBJC_BRIDGING_HEADER: ""
+        ENABLE_PREVIEWS: YES
+    entitlements:
+      path: ReflectPDF/ReflectPDF.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true
+    scheme:
+      testTargets: []
+      gatherCoverageData: false

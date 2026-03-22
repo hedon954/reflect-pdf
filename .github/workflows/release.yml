@@ -26,8 +26,8 @@ jobs:
         with:
           workspaces: reflect-pdf-core
 
-      - name: Install uniffi-bindgen-swift
-        run: cargo install uniffi-bindgen-swift
+      - name: Install xcodegen
+        run: brew install xcodegen
 
       # ── 编译双架构 ──────────────────────────────────────────────────────────
       - name: Build aarch64 (Apple Silicon)
@@ -55,6 +55,10 @@ jobs:
             --library target/aarch64-apple-darwin/release/libreflect_pdf_core.dylib \
             --language swift \
             --out-dir ../ReflectPDF/Generated
+
+      # ── 生成 Xcode 项目 ─────────────────────────────────────────────────────
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml --project ReflectPDF
 
       # ── 构建 macOS App ──────────────────────────────────────────────────────
       - name: Select Xcode
