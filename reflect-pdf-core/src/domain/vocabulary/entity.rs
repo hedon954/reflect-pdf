@@ -21,6 +21,16 @@ pub struct VocabularyEntry {
 }
 
 #[derive(Debug, Clone, uniffi::Record)]
+pub struct UpdateVocabularyRequest {
+    pub id: String,
+    pub phonetic: String,
+    pub part_of_speech: String,
+    pub context_translation: String,
+    pub context_explanation: String,
+    pub general_definition: String,
+}
+
+#[derive(Debug, Clone, uniffi::Record)]
 pub struct SaveVocabularyRequest {
     pub word: String,
     pub sentence: String,

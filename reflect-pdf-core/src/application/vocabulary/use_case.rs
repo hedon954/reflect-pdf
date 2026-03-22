@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use crate::error::ReflectError;
 use crate::domain::vocabulary::{
-    entity::{VocabularyEntry, SaveVocabularyRequest},
+    entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest},
     repository::VocabularyRepository,
 };
 
@@ -40,5 +40,9 @@ impl VocabularyUseCase {
 
     pub fn increment_query_count(&self, id: &str) -> Result<(), ReflectError> {
         self.repo.increment_query_count(id)
+    }
+
+    pub fn update(&self, req: UpdateVocabularyRequest) -> Result<VocabularyEntry, ReflectError> {
+        self.repo.update(req)
     }
 }

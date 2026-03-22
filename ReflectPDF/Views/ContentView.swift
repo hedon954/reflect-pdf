@@ -28,15 +28,18 @@ struct ContentView: View {
             .frame(minWidth: 200, idealWidth: 220)
         } detail: {
             ZStack(alignment: .bottom) {
-                switch appState.activeTab {
-                case .reader:
-                    if let doc = appState.selectedDocument {
-                        PDFReaderView(document: doc)
-                            .id(doc.id)
-                    } else {
-                        EmptyStateView()
-                    }
-                case .vocabulary:
+                // Keep PDFReaderView alive (never destroyed on tab switch),
+                // so scroll position is preserved.
+                if let doc = appState.selectedDocument {
+                    PDFReaderView(document: doc)
+                        .id(doc.id)
+                        .opacity(appState.activeTab == .reader ? 1 : 0)
+                        .allowsHitTesting(appState.activeTab == .reader)
+                } else if appState.activeTab == .reader {
+                    EmptyStateView()
+                }
+
+                if appState.activeTab == .vocabulary {
                     VocabularyListView()
                 }
 

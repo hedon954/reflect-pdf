@@ -11,6 +11,7 @@ private let _listVocabulary: () throws -> [VocabularyEntry]              = listV
 private let _deleteVocabulary: (String) throws -> Void                   = deleteVocabulary(id:)
 private let _updateAnnotation: (String, String) throws -> Void           = updateVocabularyAnnotation(id:annotationId:)
 private let _incrementQueryCount: (String) throws -> Void                = incrementVocabularyQueryCount(id:)
+private let _updateVocabulary: (UpdateVocabularyRequest) throws -> VocabularyEntry = updateVocabulary(req:)
 private let _upsertPdf: (UpsertPdfRequest) throws -> PdfDocument         = upsertPdfDocument(req:)
 private let _savePosition: (String, UInt32, Double) throws -> Void       = saveReadingPosition(filePath:page:scrollOffset:)
 private let _listPdfDocuments: () throws -> [PdfDocument]                = listPdfDocuments
@@ -97,6 +98,17 @@ final class BridgeService {
 
     func incrementQueryCount(id: String) {
         try? _incrementQueryCount(id)
+    }
+
+    @discardableResult
+    func updateVocabulary(id: String, phonetic: String, partOfSpeech: String,
+                          contextTranslation: String, contextExplanation: String,
+                          generalDefinition: String) throws -> VocabularyEntry {
+        try _updateVocabulary(UpdateVocabularyRequest(
+            id: id, phonetic: phonetic, partOfSpeech: partOfSpeech,
+            contextTranslation: contextTranslation, contextExplanation: contextExplanation,
+            generalDefinition: generalDefinition
+        ))
     }
 
     // MARK: - PDF Documents

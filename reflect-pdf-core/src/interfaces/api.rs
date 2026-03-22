@@ -1,7 +1,7 @@
 use std::sync::{Arc, OnceLock};
 use crate::error::ReflectError;
 use crate::domain::translation::entity::{TranslationRequest, TranslationResult};
-use crate::domain::vocabulary::entity::{VocabularyEntry, SaveVocabularyRequest};
+use crate::domain::vocabulary::entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest};
 use crate::domain::pdf_document::entity::{PdfDocument, UpsertPdfRequest};
 use crate::application::translation::use_case::TranslationUseCase;
 use crate::application::vocabulary::use_case::VocabularyUseCase;
@@ -127,6 +127,12 @@ pub fn update_vocabulary_annotation(id: String, annotation_id: String) -> Result
 pub fn increment_vocabulary_query_count(id: String) -> Result<(), ReflectError> {
     VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
         .increment_query_count(&id)
+}
+
+#[uniffi::export]
+pub fn update_vocabulary(req: UpdateVocabularyRequest) -> Result<VocabularyEntry, ReflectError> {
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
+        .update(req)
 }
 
 // ── PDF Document API ─────────────────────────────────────────────────────────

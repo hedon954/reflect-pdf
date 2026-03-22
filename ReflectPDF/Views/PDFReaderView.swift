@@ -37,7 +37,9 @@ struct PDFReaderView: View {
                     isLoading: isTranslating,
                     onSave: { result in
                         saveToDiary(result: result, request: req)
-                        translationRequest = nil
+                    },
+                    onDelete: {
+                        appState.refreshVocabulary()
                     },
                     onDismiss: {
                         translationRequest = nil
@@ -63,8 +65,6 @@ struct PDFReaderView: View {
             totalPages: UInt32(totalPages)
         )
         appState.refreshLibrary()
-        // Restore saved-word highlights after doc loads
-        appState.applyHighlights()
 
         if document.lastPage > 0 {
             appState.showToast("已定位到 P\(document.lastPage + 1)")
@@ -116,9 +116,10 @@ struct PDFReaderView: View {
         }
     }
 
-    private func saveToDiary(result: TranslationResult, request: TranslationBubbleRequest) {
+    /// Returns the saved entry's ID (passed back to TranslationBubble to show delete button).
+    @discardableResult
+    private func saveToDiary(result: TranslationResult, request: TranslationBubbleRequest) -> String? {
         let hash = session.sentenceHash(request.sentence)
-        // Use NSStringFromRect so it can be parsed back with NSRectFromString
         let boundsStr = NSStringFromRect(request.bounds)
         guard let entry = try? BridgeService.shared.saveVocabulary(
             word: result.word,
@@ -134,23 +135,22 @@ struct PDFReaderView: View {
             contextExplanation: result.contextExplanation,
             generalDefinition: result.generalDefinition,
             translationSource: result.source
-        ) else { return }
+        ) else { return nil }
 
-        // Add highlight annotation to PDF page immediately
-        highlightEntry(entry)
+        // Post notification so the Coordinator adds highlight to pdfView.document
+        NotificationCenter.default.post(
+            name: .addHighlight,
+            object: nil,
+            userInfo: [
+                "entryId": entry.id,
+                "pageIndex": Int(entry.pageIndex),
+                "bounds": boundsStr,
+                "filePath": document.filePath
+            ]
+        )
         appState.refreshVocabulary()
         appState.showToast("已保存「\(entry.word)」")
-    }
-
-    private func highlightEntry(_ entry: VocabularyEntry) {
-        guard let kitDoc = appState.kitDocument,
-              let page = kitDoc.page(at: Int(entry.pageIndex)) else { return }
-        let bounds = NSRectFromString(entry.selectionBounds)
-        guard bounds != .zero else { return }
-        let annotation = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
-        annotation.color = NSColor.systemYellow.withAlphaComponent(0.5)
-        annotation.userName = entry.id
-        page.addAnnotation(annotation)
+        return entry.id
     }
 }
 
@@ -200,6 +200,13 @@ struct PDFKitView: NSViewRepresentable {
             name: .jumpToPage,
             object: nil
         )
+        // Add highlight annotation (on save)
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.addHighlight(_:)),
+            name: .addHighlight,
+            object: nil
+        )
         context.coordinator.pdfView = pdfView
         return pdfView
     }
@@ -217,6 +224,9 @@ struct PDFKitView: NSViewRepresentable {
             if savedPage > 0, savedPage < doc.pageCount, let page = doc.page(at: savedPage) {
                 pdfView.go(to: page)
             }
+
+            // Restore highlights for saved vocab entries
+            context.coordinator.applyHighlights(to: doc, filePath: filePath)
         }
     }
 
@@ -224,18 +234,51 @@ struct PDFKitView: NSViewRepresentable {
         var parent: PDFKitView
         weak var pdfView: PDFView?
         private var debounceTimer: Timer?
+        /// Set to true during vocabulary-jump to suppress translation trigger.
+        var isJumping = false
 
         init(_ parent: PDFKitView) {
             self.parent = parent
         }
 
         @objc func outlineNavigate(_ notification: Notification) {
-            guard let dest = notification.userInfo?["destination"] as? PDFDestination,
+            guard let pageIndex = notification.userInfo?["pageIndex"] as? Int,
+                  let filePath  = notification.userInfo?["filePath"]  as? String,
                   let pdfView,
-                  let notifDoc = notification.userInfo?["document"] as? PDFKit.PDFDocument,
-                  pdfView.document?.documentURL == notifDoc.documentURL
+                  pdfView.document?.documentURL?.path == filePath,
+                  let page = pdfView.document?.page(at: pageIndex)
             else { return }
-            pdfView.go(to: dest)
+            pdfView.go(to: page)
+        }
+
+        @objc func addHighlight(_ notification: Notification) {
+            guard let entryId   = notification.userInfo?["entryId"]   as? String,
+                  let pageIndex = notification.userInfo?["pageIndex"]  as? Int,
+                  let boundsStr = notification.userInfo?["bounds"]     as? String,
+                  let filePath  = notification.userInfo?["filePath"]   as? String,
+                  let pdfView,
+                  pdfView.document?.documentURL?.path == filePath,
+                  let page = pdfView.document?.page(at: pageIndex)
+            else { return }
+            addAnnotation(entryId: entryId, boundsStr: boundsStr, to: page)
+        }
+
+        func applyHighlights(to doc: PDFDocument, filePath: String) {
+            let entries = (try? BridgeService.shared.listVocabulary()) ?? []
+            for entry in entries where entry.pdfPath == filePath {
+                guard let page = doc.page(at: Int(entry.pageIndex)) else { continue }
+                addAnnotation(entryId: entry.id, boundsStr: entry.selectionBounds, to: page)
+            }
+        }
+
+        private func addAnnotation(entryId: String, boundsStr: String, to page: PDFPage) {
+            let bounds = NSRectFromString(boundsStr)
+            guard bounds != .zero else { return }
+            guard !page.annotations.contains(where: { $0.userName == entryId }) else { return }
+            let ann = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
+            ann.color = NSColor.systemYellow.withAlphaComponent(0.5)
+            ann.userName = entryId
+            page.addAnnotation(ann)
         }
 
         @objc func jumpToPage(_ notification: Notification) {
@@ -245,7 +288,12 @@ struct PDFKitView: NSViewRepresentable {
                   pdfView.document?.documentURL?.path == filePath,
                   let page = pdfView.document?.page(at: pageIndex)
             else { return }
+            isJumping = true
             pdfView.go(to: page)
+            // Clear flag after debounce window passes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                self?.isJumping = false
+            }
         }
 
         @objc func pageChanged(_ notification: Notification) {
@@ -258,6 +306,7 @@ struct PDFKitView: NSViewRepresentable {
         }
 
         @objc func selectionChanged(_ notification: Notification) {
+            guard !isJumping else { return }
             guard let pdfView = notification.object as? PDFView,
                   let selection = pdfView.currentSelection,
                   let selectedString = selection.string, !selectedString.isEmpty else { return }
@@ -302,6 +351,10 @@ struct PDFKitView: NSViewRepresentable {
 }
 
 // MARK: - Supporting types
+
+extension Notification.Name {
+    static let addHighlight = Notification.Name("addHighlight")
+}
 
 struct TranslationBubbleRequest: Identifiable, Equatable {
     let id = UUID()

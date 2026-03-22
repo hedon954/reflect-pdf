@@ -36,47 +36,53 @@ struct VocabularyListView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
-            .padding(8)
+            .padding(10)
 
             Divider()
 
             if appState.vocabulary.isEmpty {
-                Spacer()
-                VStack(spacing: 10) {
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.tertiary)
-                    Text("还没有保存单词")
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
+                emptyState
             } else if filtered.isEmpty {
                 Spacer()
-                Text("没有匹配结果")
-                    .foregroundStyle(.secondary)
+                Text("没有匹配结果").foregroundStyle(.secondary)
                 Spacer()
             } else {
-                List(filtered, id: \.id) { entry in
-                    VocabularyRow(entry: entry, audio: audio)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) { delete(entry) } label: {
-                                Label("删除", systemImage: "trash")
-                            }
-                            Button { editingEntry = entry } label: {
-                                Label("编辑", systemImage: "pencil")
-                            }
-                            .tint(.blue)
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(filtered) { entry in
+                            VocabularyCard(entry: entry, audio: audio)
+                                .contextMenu {
+                                    Button { editingEntry = entry } label: {
+                                        Label("编辑", systemImage: "pencil")
+                                    }
+                                    Divider()
+                                    Button(role: .destructive) { delete(entry) } label: {
+                                        Label("删除", systemImage: "trash")
+                                    }
+                                }
+                                .onTapGesture { jumpToPDF(entry: entry) }
                         }
-                        .onTapGesture { jumpToPDF(entry: entry) }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
                 }
-                .listStyle(.sidebar)
             }
         }
         .onAppear { appState.refreshVocabulary() }
         .sheet(item: $editingEntry) { entry in
-            VocabularyEditSheet(entry: entry) {
-                appState.refreshVocabulary()
-            }
+            VocabularyEditSheet(entry: entry) { appState.refreshVocabulary() }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Spacer()
+            Image(systemName: "book.closed")
+                .font(.system(size: 40))
+                .foregroundStyle(.tertiary)
+            Text("还没有保存单词")
+                .foregroundStyle(.secondary)
+            Spacer()
         }
     }
 
@@ -89,8 +95,7 @@ struct VocabularyListView: View {
         if let doc = appState.library.first(where: { $0.filePath == entry.pdfPath }) {
             appState.selectedDocument = doc
             appState.activeTab = .reader
-            // After the PDF loads, scroll to the page via notification
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 NotificationCenter.default.post(
                     name: .jumpToPage,
                     object: nil,
@@ -101,30 +106,31 @@ struct VocabularyListView: View {
     }
 }
 
-// MARK: - Row
+// MARK: - Card
 
-private struct VocabularyRow: View {
+private struct VocabularyCard: View {
     let entry: VocabularyEntry
     let audio: AudioService
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Word + phonetic + POS + pronounce
+        VStack(alignment: .leading, spacing: 8) {
+
+            // ── Top row: word + phonetic + POS + speaker ──────────────────────
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(entry.word)
-                    .font(.callout.bold())
+                    .font(.title3.bold())
 
                 if !entry.phonetic.isEmpty {
                     Text("[\(entry.phonetic)]")
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
 
                 if !entry.partOfSpeech.isEmpty {
                     Text(entry.partOfSpeech)
-                        .font(.caption2)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
+                        .font(.caption)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
                         .background(.blue.opacity(0.1), in: Capsule())
                         .foregroundStyle(.blue)
                 }
@@ -132,116 +138,129 @@ private struct VocabularyRow: View {
                 Spacer()
 
                 Button { audio.speak(entry.word) } label: {
-                    Image(systemName: "speaker.wave.1")
-                        .font(.caption)
+                    Image(systemName: "speaker.wave.1.fill")
+                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
             }
 
-            // Context translation
+            Divider()
+
+            // ── Context translation ───────────────────────────────────────────
             if !entry.contextTranslation.isEmpty {
                 Text(entry.contextTranslation)
-                    .font(.callout)
-                    .foregroundStyle(.primary)
+                    .font(.body)
             }
 
-            // General definition
+            // ── General definition ────────────────────────────────────────────
             if !entry.generalDefinition.isEmpty {
                 Text(entry.generalDefinition)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
 
-            // Original sentence
+            // ── Original sentence ─────────────────────────────────────────────
             if !entry.sentence.isEmpty {
                 Text("「\(entry.sentence)」")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .italic()
-                    .lineLimit(2)
+                    .lineLimit(3)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.quinary, in: RoundedRectangle(cornerRadius: 6))
             }
 
-            // Source + page + query count + translation source badge
-            HStack(spacing: 8) {
-                Label("\(entry.pdfName) · P\(entry.pageIndex + 1)", systemImage: "doc.text")
+            // ── Footer: source + query count + badge ──────────────────────────
+            HStack(spacing: 6) {
+                Image(systemName: "doc.text")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                Text("\(entry.pdfName)  P\(entry.pageIndex + 1)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
                 if entry.queryCount > 0 {
-                    Label("\(entry.queryCount)次查询", systemImage: "repeat")
+                    Text("·")
+                        .foregroundStyle(.tertiary)
+                        .font(.caption2)
+                    Label("\(entry.queryCount) 次", systemImage: "repeat")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
 
                 Spacer()
 
-                Text(sourceLabel(entry.translationSource))
-                    .font(.caption2)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(sourceBadgeColor(entry.translationSource).opacity(0.12), in: Capsule())
-                    .foregroundStyle(sourceBadgeColor(entry.translationSource))
+                sourceBadge(entry.translationSource)
             }
         }
-        .padding(.vertical, 4)
+        .padding(14)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(.separator, lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
     }
 
-    private func sourceLabel(_ src: String) -> String {
-        switch src {
-        case "llm": return "AI 翻译"
-        case "fallback": return "基础翻译"
-        case "cache": return "缓存"
-        default: return src
+    @ViewBuilder
+    private func sourceBadge(_ src: String) -> some View {
+        let (label, color): (String, Color) = switch src {
+            case "llm":      ("AI", .purple)
+            case "fallback": ("基础", .orange)
+            default:         ("缓存", .gray)
         }
-    }
-
-    private func sourceBadgeColor(_ src: String) -> Color {
-        switch src {
-        case "llm": return .purple
-        case "fallback": return .orange
-        default: return .gray
-        }
+        Text(label)
+            .font(.caption2.weight(.medium))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.12), in: Capsule())
+            .foregroundStyle(color)
     }
 }
 
-// MARK: - Edit sheet
+// MARK: - Edit sheet (all translation fields editable)
 
 private struct VocabularyEditSheet: View {
     let entry: VocabularyEntry
     let onSave: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var annotationNote: String
+    @State private var phonetic: String
+    @State private var partOfSpeech: String
+    @State private var contextTranslation: String
+    @State private var contextExplanation: String
+    @State private var generalDefinition: String
 
     init(entry: VocabularyEntry, onSave: @escaping () -> Void) {
         self.entry = entry
         self.onSave = onSave
-        _annotationNote = State(initialValue: entry.annotationId ?? "")
+        _phonetic           = State(initialValue: entry.phonetic)
+        _partOfSpeech       = State(initialValue: entry.partOfSpeech)
+        _contextTranslation = State(initialValue: entry.contextTranslation)
+        _contextExplanation = State(initialValue: entry.contextExplanation)
+        _generalDefinition  = State(initialValue: entry.generalDefinition)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("编辑「\(entry.word)」")
                 .font(.title2.bold())
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("个人备注").font(.caption.bold()).foregroundStyle(.secondary)
-                TextEditor(text: $annotationNote)
-                    .font(.callout)
-                    .frame(height: 80)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(.separator))
-            }
+            editRow("音标", text: $phonetic)
+            editRow("词性", text: $partOfSpeech)
+            editArea("语境翻译", text: $contextTranslation, height: 54)
+            editArea("语境解释", text: $contextExplanation, height: 54)
+            editArea("通用释义", text: $generalDefinition,  height: 54)
 
-            // Read-only info
-            Group {
-                infoRow("音标", entry.phonetic)
-                infoRow("语境释义", entry.contextTranslation)
-                infoRow("通用释义", entry.generalDefinition)
-                infoRow("来源", "\(entry.pdfName) P\(entry.pageIndex + 1)")
+            // Read-only source info
+            HStack(spacing: 4) {
+                Image(systemName: "doc.text").font(.caption2).foregroundStyle(.tertiary)
+                Text("\(entry.pdfName)  P\(entry.pageIndex + 1)")
+                    .font(.caption2).foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -250,30 +269,40 @@ private struct VocabularyEditSheet: View {
                 Button("取消") { dismiss() }
                 Spacer()
                 Button("保存") {
-                    try? BridgeService.shared.updateVocabularyAnnotation(
+                    try? BridgeService.shared.updateVocabulary(
                         id: entry.id,
-                        annotationId: annotationNote
+                        phonetic: phonetic,
+                        partOfSpeech: partOfSpeech,
+                        contextTranslation: contextTranslation,
+                        contextExplanation: contextExplanation,
+                        generalDefinition: generalDefinition
                     )
-                    onSave()
-                    dismiss()
+                    onSave(); dismiss()
                 }
                 .buttonStyle(.borderedProminent)
             }
         }
-        .padding(24)
-        .frame(width: 380, height: 420)
+        .padding(20)
+        .frame(width: 400, height: 520)
     }
 
-    private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+    private func editRow(_ label: String, text: Binding<String>) -> some View {
+        HStack(spacing: 8) {
             Text(label)
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
-                .frame(width: 70, alignment: .trailing)
-            Text(value.isEmpty ? "—" : value)
-                .font(.caption)
-                .foregroundStyle(.primary)
-            Spacer()
+                .font(.caption.bold()).foregroundStyle(.secondary)
+                .frame(width: 60, alignment: .trailing)
+            TextField("", text: text)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
+    private func editArea(_ label: String, text: Binding<String>, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.caption.bold()).foregroundStyle(.secondary)
+            TextEditor(text: text)
+                .font(.callout)
+                .frame(height: height)
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(.separator))
         }
     }
 }

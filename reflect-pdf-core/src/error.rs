@@ -16,6 +16,9 @@ pub enum ReflectError {
 
     #[error("Serialization error: {message}")]
     SerializationError { message: String },
+
+    #[error("Not found: {message}")]
+    NotFound { message: String },
 }
 
 impl From<rusqlite::Error> for ReflectError {

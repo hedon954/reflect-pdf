@@ -1,5 +1,5 @@
 use crate::domain::vocabulary::{
-    entity::{VocabularyEntry, SaveVocabularyRequest},
+    entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest},
     repository::VocabularyRepository,
 };
 use crate::error::ReflectError;
@@ -147,5 +147,21 @@ impl VocabularyRepository for SqliteVocabularyRepo {
             rusqlite::params![id],
         )?;
         Ok(())
+    }
+
+    fn update(&self, req: UpdateVocabularyRequest) -> Result<VocabularyEntry, ReflectError> {
+        let conn = self.pool.get()?;
+        conn.execute(
+            "UPDATE vocabulary_entries SET phonetic = ?1, part_of_speech = ?2,
+             context_translation = ?3, context_explanation = ?4, general_definition = ?5
+             WHERE id = ?6",
+            rusqlite::params![
+                req.phonetic, req.part_of_speech,
+                req.context_translation, req.context_explanation,
+                req.general_definition, req.id,
+            ],
+        )?;
+        self.get_by_id(&req.id)?
+            .ok_or_else(|| ReflectError::NotFound { message: format!("entry {} not found", req.id) })
     }
 }

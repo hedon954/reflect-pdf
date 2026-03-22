@@ -21,8 +21,10 @@ final class AppState: ObservableObject {
     @Published var activeTab: MainTab = .reader
     @Published var toastMessage: String?
 
-    /// PDFKit document object – used for TOC sidebar and annotation highlights.
+    /// PDFKit document object – used for TOC sidebar.
     @Published var kitDocument: PDFKit.PDFDocument?
+    /// Current page index (0-based), updated on page change for TOC highlight.
+    @Published var currentPageIndex: Int = 0
 
     private let bridge = BridgeService.shared
 
@@ -72,29 +74,8 @@ final class AppState: ObservableObject {
 
     func saveReadingPosition(filePath: String, page: UInt32, scrollOffset: Double) {
         try? bridge.saveReadingPosition(filePath: filePath, page: page, scrollOffset: scrollOffset)
+        currentPageIndex = Int(page)
         refreshLibrary()
-    }
-
-    // MARK: - Vocabulary highlight
-
-    /// Apply yellow highlight annotations for all saved words in the current PDF.
-    func applyHighlights() {
-        guard let kitDoc = kitDocument,
-              let filePath = selectedDocument?.filePath else { return }
-        let entries = (try? bridge.listVocabulary()) ?? []
-        let relevant = entries.filter { $0.pdfPath == filePath }
-        for entry in relevant {
-            guard let page = kitDoc.page(at: Int(entry.pageIndex)) else { continue }
-            let bounds = NSRectFromString(entry.selectionBounds)
-            guard bounds != .zero else { continue }
-            // Skip if annotation already present (check annotationId)
-            let alreadyAdded = page.annotations.contains { $0.userName == entry.id }
-            guard !alreadyAdded else { continue }
-            let annotation = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
-            annotation.color = NSColor.systemYellow.withAlphaComponent(0.5)
-            annotation.userName = entry.id
-            page.addAnnotation(annotation)
-        }
     }
 
     // MARK: - Private
