@@ -31,7 +31,9 @@ cargo run --bin uniffi-bindgen generate \
     --language swift \
     --out-dir "$OUT_DIR"
 
-echo "→ [3/3] 复制 dylib..."
+echo "→ [3/3] 复制 dylib 并修正 install_name..."
 cp "$DYLIB_PATH" "$OUT_DIR/"
+# 将 install_name 改为 @rpath 相对路径，确保 Xcode 链接时不硬编码本机绝对路径
+install_name_tool -id "@rpath/libreflect_pdf_core.dylib" "$OUT_DIR/libreflect_pdf_core.dylib"
 
 echo "✓ 完成。产物位于 ReflectPDF/Generated/"

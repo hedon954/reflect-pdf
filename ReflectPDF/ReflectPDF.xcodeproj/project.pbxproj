@@ -7,10 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02FE8AA58A2C933872D7FD07 /* libreflect_pdf_core.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3599E7BF853D51936E3846E /* libreflect_pdf_core.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		17B36F3752C55AA48CD5CF6E /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30456747A47EDA8FF192E86 /* AudioService.swift */; };
 		1C3F37EC59BB1BE8D5741CB1 /* PDFOutlineSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */; };
 		1C681DA3081254BB263E8F16 /* TranslationErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9455B1DE473E83A2F007CA8A /* TranslationErrorFormatter.swift */; };
 		1C9385AB37DED7A80952156F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C35D1760E464DF098B96BA0 /* ContentView.swift */; };
+		1F96E2C9EB6DF09B82636D06 /* libreflect_pdf_core.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B3599E7BF853D51936E3846E /* libreflect_pdf_core.dylib */; };
 		227D87F9BB1FF98F40250DB3 /* ContextSentenceFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C44664755D60B7F7B24EC2 /* ContextSentenceFormatting.swift */; };
 		3B63A5A4F5A49358E476AA66 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17802E6878B3BC2E978C1FD /* KeychainService.swift */; };
 		551AF0683BA0DAFDC3516777 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13492BDC4DA725FE25A5D0E0 /* SettingsView.swift */; };
@@ -26,6 +28,20 @@
 		F667E0746CD86CF36CB023AB /* BridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C390E8BEDF6FAECBF5BA0A9 /* BridgeService.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		9994A491815EA46DFDAE1793 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				02FE8AA58A2C933872D7FD07 /* libreflect_pdf_core.dylib in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0FA68CECE0D2624711BB02CA /* TranslationBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationBubble.swift; sourceTree = "<group>"; };
 		13492BDC4DA725FE25A5D0E0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -37,6 +53,7 @@
 		8B1FCA547E9B9BA8F0DDF020 /* PDFReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReaderView.swift; sourceTree = "<group>"; };
 		9455B1DE473E83A2F007CA8A /* TranslationErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationErrorFormatter.swift; sourceTree = "<group>"; };
 		9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFOutlineSidebarView.swift; sourceTree = "<group>"; };
+		B3599E7BF853D51936E3846E /* libreflect_pdf_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libreflect_pdf_core.dylib; path = Generated/libreflect_pdf_core.dylib; sourceTree = "<group>"; };
 		B82C2CBC2FC2C97838F3CF66 /* VocabularyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyListView.swift; sourceTree = "<group>"; };
 		C088A980EA9509E6DF51CE95 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D0D122985A8763F10DD9F5BD /* LibrarySidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebarView.swift; sourceTree = "<group>"; };
@@ -49,6 +66,17 @@
 		FBBAC5036198ED637E8F277F /* reflect_pdf_coreFFI.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = reflect_pdf_coreFFI.modulemap; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		B96592414D13F42F6E58697F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F96E2C9EB6DF09B82636D06 /* libreflect_pdf_core.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		48AB3008D5AD04318348097B = {
 			isa = PBXGroup;
@@ -57,6 +85,7 @@
 				B3A93BC1FB4876ABA4CEC134 /* Generated */,
 				6907B8CAAE2035930FFC0065 /* Services */,
 				BC382ADF1E94197521AEA927 /* Views */,
+				BAEF9B7A146FEDDBB2F08D2D /* Frameworks */,
 				7B6B2A2A5EF40F6CD44A6710 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -101,6 +130,14 @@
 			path = Generated;
 			sourceTree = "<group>";
 		};
+		BAEF9B7A146FEDDBB2F08D2D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B3599E7BF853D51936E3846E /* libreflect_pdf_core.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		BC382ADF1E94197521AEA927 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -125,6 +162,8 @@
 			buildPhases = (
 				D0CE9034E9724DB357D9A479 /* Sources */,
 				E6789184B62D0FDAE5426046 /* Resources */,
+				B96592414D13F42F6E58697F /* Frameworks */,
+				9994A491815EA46DFDAE1793 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -273,6 +312,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReflectPDF.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Generated\"",
+				);
 				HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -290,6 +333,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ReflectPDF.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Generated\"",
+				);
 				HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
