@@ -107,48 +107,11 @@ struct TranslationBubble: View {
             }
             .padding(14)
         } else if let result = request.result {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if !result.contextTranslation.isEmpty {
-                        BubbleSection("语境翻译") {
-                            Text(result.contextTranslation).font(.body)
-                        }
-                    }
-                    if !result.contextExplanation.isEmpty {
-                        BubbleSection("语境解释") {
-                            Text(result.contextExplanation)
-                                .font(.callout).foregroundStyle(.secondary)
-                        }
-                    }
-                    if !result.generalDefinition.isEmpty {
-                        BubbleSection("通用释义") {
-                            Text(result.generalDefinition)
-                                .font(.callout).foregroundStyle(.secondary)
-                        }
-                    }
-                    BubbleSection("原文语境") {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(ContextSentenceFormatting.displayParagraph(request.sentence))
-                                .font(.callout)
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
-                            if !result.contextSentenceTranslation.isEmpty {
-                                Text(result.contextSentenceTranslation)
-                                    .font(.callout)
-                                    .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.leading)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
-                    }
-                }
-                .padding(14)
+            ViewThatFits(in: .vertical) {
+                contentBody(result: result)
+                ScrollView { contentBody(result: result) }
+                    .frame(maxHeight: 520)
             }
-            .frame(maxHeight: 520)
 
             if !result.llmErrorMessage.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
@@ -200,6 +163,51 @@ struct TranslationBubble: View {
             }
             .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
         }
+    }
+
+    // MARK: - Content body helper
+
+    @ViewBuilder
+    private func contentBody(result: TranslationResult) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if !result.contextTranslation.isEmpty {
+                BubbleSection("语境翻译") {
+                    Text(result.contextTranslation).font(.body)
+                }
+            }
+            if !result.contextExplanation.isEmpty {
+                BubbleSection("语境解释") {
+                    Text(result.contextExplanation)
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            if !result.generalDefinition.isEmpty {
+                BubbleSection("通用释义") {
+                    Text(result.generalDefinition)
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            BubbleSection("原文语境") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(ContextSentenceFormatting.displayParagraph(request.sentence))
+                        .font(.callout)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !result.contextSentenceTranslation.isEmpty {
+                        Text(result.contextSentenceTranslation)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.quinary, in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(14)
     }
 
     // MARK: - Footer
