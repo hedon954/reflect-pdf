@@ -48,7 +48,7 @@ if [[ "$CURRENT_DEV_DIR" == *"CommandLineTools"* ]]; then
 fi
 
 # ── 1. 构建 Universal Rust dylib ─────────────────────────────────────────────
-echo "→ [1/5] 构建 Universal Rust dylib..."
+echo "→ [1/6] 构建 Universal Rust dylib..."
 cd "$CRATE_DIR"
 
 rustup target add aarch64-apple-darwin x86_64-apple-darwin 2>/dev/null || true
@@ -71,7 +71,7 @@ install_name_tool -id "@rpath/liblumen_pdf_core.dylib" "$UNIVERSAL_DYLIB"
 echo "   ✓ install_name → @rpath/liblumen_pdf_core.dylib"
 
 # 生成 UniFFI Swift 绑定（使用 arm64 release 产物）
-echo "→ [2/5] 生成 UniFFI Swift 绑定..."
+echo "→ [2/6] 生成 UniFFI Swift 绑定..."
 mkdir -p "$GENERATED_DIR"
 cargo run --bin uniffi-bindgen generate \
     --library "$ARM_DYLIB" \
@@ -80,8 +80,15 @@ cargo run --bin uniffi-bindgen generate \
 cp "$UNIVERSAL_DYLIB" "$GENERATED_DIR/liblumen_pdf_core.dylib"
 echo "   ✓ 绑定已生成至 $GENERATED_DIR"
 
-# ── 2. xcodebuild archive ────────────────────────────────────────────────────
-echo "→ [3/5] xcodebuild archive..."
+# 重新生成 Xcode 项目（确保包含新生成的 Swift 文件）
+echo "→ [2.5/5] 重新生成 Xcode 项目..."
+cd "$XCODE_DIR"
+xcodegen generate
+cd "$ROOT_DIR"
+echo "   ✓ Xcode 项目已更新"
+
+# ── 3. xcodebuild archive ────────────────────────────────────────────────────
+echo "→ [3/6] xcodebuild archive..."
 mkdir -p "$BUILD_DIR"
 
 SIGN_ARGS=()
@@ -118,7 +125,7 @@ fi
 echo "   ✓ Archive: $ARCHIVE_PATH"
 
 # ── 3. 导出 .app ─────────────────────────────────────────────────────────────
-echo "→ [4/5] 导出 .app..."
+echo "→ [4/6] 导出 .app..."
 rm -rf "$EXPORT_DIR"
 
 if [ -n "$TEAM_ID" ]; then
@@ -157,7 +164,7 @@ fi
 echo "   ✓ .app: $APP_PATH"
 
 # ── 4.5: 将 dylib 嵌入 app bundle 并修正引用 ─────────────────────────────────
-echo "→ [4.5/5] 嵌入 dylib 到 Contents/Frameworks/..."
+echo "→ [5/6] 嵌入 dylib 到 Contents/Frameworks/..."
 FRAMEWORKS_DIR="$APP_PATH/Contents/Frameworks"
 BINARY="$APP_PATH/Contents/MacOS/$APP_NAME"
 
@@ -185,7 +192,7 @@ codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_PATH"
 echo "   ✓ 已重签名"
 
 # ── 4. 制作 DMG（hdiutil，macOS 内置）───────────────────────────────────────
-echo "→ [5/5] 制作 DMG..."
+echo "→ [6/6] 制作 DMG..."
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
 cp -R "$APP_PATH" "$DMG_STAGING/"

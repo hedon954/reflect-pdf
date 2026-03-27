@@ -35,10 +35,6 @@ jobs:
       - name: Install xcodegen
         run: brew install xcodegen
 
-      # ── 生成 Xcode 项目 ─────────────────────────────────────────────────────
-      - name: Generate Xcode project
-        run: cd LumenPDF && xcodegen generate
-
       # ── 使用 make dmg 打包 ───────────────────────────────────────────────────
       - name: Build DMG
         run: VERSION=${GITHUB_REF_NAME#v} make dmg
