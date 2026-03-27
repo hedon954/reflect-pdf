@@ -1,8 +1,9 @@
-use reqwest::Client;
-use serde::Deserialize;
 use crate::domain::translation::{entity::TranslationResult, repository::Translator};
 use crate::error::LumenError;
+use reqwest::Client;
+use serde::Deserialize;
 
+#[allow(unused)]
 pub struct FallbackTranslator {
     client: Client,
     target_lang: String,
@@ -10,15 +11,14 @@ pub struct FallbackTranslator {
 
 impl FallbackTranslator {
     pub fn new(target_lang: String) -> Self {
-        Self { client: Client::new(), target_lang }
+        Self {
+            client: Client::new(),
+            target_lang,
+        }
     }
 
     fn lang_code(&self) -> &str {
-        if self.target_lang.contains("中文") || self.target_lang.contains("Chinese") {
-            "zh"
-        } else {
-            "zh"
-        }
+        "zh"
     }
 }
 
@@ -43,11 +43,14 @@ impl Translator for FallbackTranslator {
             self.lang_code(),
         );
 
-        let resp = self.client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| LumenError::FallbackApiError { message: e.to_string() })?;
+        let resp =
+            self.client
+                .get(&url)
+                .send()
+                .await
+                .map_err(|e| LumenError::FallbackApiError {
+                    message: e.to_string(),
+                })?;
 
         if !resp.status().is_success() {
             return Err(LumenError::FallbackApiError {
@@ -55,8 +58,12 @@ impl Translator for FallbackTranslator {
             });
         }
 
-        let data: MyMemoryResponse = resp.json().await
-            .map_err(|e| LumenError::FallbackApiError { message: e.to_string() })?;
+        let data: MyMemoryResponse =
+            resp.json()
+                .await
+                .map_err(|e| LumenError::FallbackApiError {
+                    message: e.to_string(),
+                })?;
 
         // Second call: full sentence translation (MyMemory ~500 char practical limit)
         let sentence_tr = Self::translate_chunk(&self.client, sentence, self.lang_code()).await;

@@ -1,21 +1,22 @@
-use std::sync::{Arc, OnceLock, RwLock};
-use crate::error::LumenError;
-use crate::domain::translation::entity::{TranslationRequest, TranslationResult};
-use crate::domain::vocabulary::entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest};
-use crate::domain::pdf_document::entity::{PdfDocument, UpsertPdfRequest};
+use crate::application::pdf_document::use_case::PdfDocumentUseCase;
 use crate::application::translation::use_case::TranslationUseCase;
 use crate::application::vocabulary::use_case::VocabularyUseCase;
-use crate::application::pdf_document::use_case::PdfDocumentUseCase;
+use crate::domain::pdf_document::entity::{PdfDocument, UpsertPdfRequest};
+use crate::domain::translation::entity::{TranslationRequest, TranslationResult};
+use crate::domain::vocabulary::entity::{
+    SaveVocabularyRequest, UpdateVocabularyRequest, VocabularyEntry,
+};
+use crate::error::LumenError;
 use crate::infrastructure::db::{self, DbPool};
 use crate::infrastructure::db::{
-    translation_cache_repo::SqliteTranslationCacheRepo,
+    pdf_document_repo::SqlitePdfDocumentRepo, translation_cache_repo::SqliteTranslationCacheRepo,
     vocabulary_repo::SqliteVocabularyRepo,
-    pdf_document_repo::SqlitePdfDocumentRepo,
 };
 use crate::infrastructure::translator::{
-    llm_translator::{LlmTranslator, LlmConfig},
     fallback_translator::FallbackTranslator,
+    llm_translator::{LlmConfig, LlmTranslator},
 };
+use std::sync::{Arc, OnceLock, RwLock};
 
 // ── Global state ────────────────────────────────────────────────────────────
 
@@ -30,11 +31,13 @@ static LLM_CONFIG: RwLock<Option<LlmConfig>> = RwLock::new(None);
 pub fn initialize(db_path: String, config: AppConfig) -> Result<(), LumenError> {
     // Pool: only create if not already initialised.
     if POOL.get().is_none() {
-        let pool = db::create_pool(&db_path)
-            .map_err(|e| LumenError::DatabaseError { message: e.to_string() })?;
+        let pool = db::create_pool(&db_path).map_err(|e| LumenError::DatabaseError {
+            message: e.to_string(),
+        })?;
         {
-            let conn = pool.get()
-                .map_err(|e| LumenError::DatabaseError { message: e.to_string() })?;
+            let conn = pool.get().map_err(|e| LumenError::DatabaseError {
+                message: e.to_string(),
+            })?;
             crate::infrastructure::db::migration::run(&conn)?;
         }
         // Ignore error if another thread beat us to it.
@@ -55,8 +58,9 @@ pub fn update_llm_config(config: AppConfig) -> Result<(), LumenError> {
 }
 
 fn set_llm_config_inner(config: AppConfig) -> Result<(), LumenError> {
-    let mut guard = LLM_CONFIG.write()
-        .map_err(|_| LumenError::DatabaseError { message: "LLM config lock poisoned".into() })?;
+    let mut guard = LLM_CONFIG.write().map_err(|_| LumenError::DatabaseError {
+        message: "LLM config lock poisoned".into(),
+    })?;
     *guard = Some(LlmConfig {
         base_url: config.llm_base_url,
         api_key: config.llm_api_key,
@@ -72,7 +76,8 @@ fn pool() -> Result<&'static DbPool, LumenError> {
 
 /// Returns a *clone* of the current LLM config (cheap — all fields are `String`).
 fn llm_config() -> Result<LlmConfig, LumenError> {
-    LLM_CONFIG.read()
+    LLM_CONFIG
+        .read()
         .map_err(|_| LumenError::ConfigNotInitialized)?
         .clone()
         .ok_or(LumenError::ConfigNotInitialized)
@@ -108,32 +113,31 @@ pub async fn translate(request: TranslationRequest) -> Result<TranslationResult,
 
 #[uniffi::export]
 pub fn save_vocabulary(req: SaveVocabularyRequest) -> Result<VocabularyEntry, LumenError> {
-    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
-        .save(req)
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone()))).save(req)
 }
 
 #[uniffi::export]
 pub fn get_vocabulary_entry(id: String) -> Result<Option<VocabularyEntry>, LumenError> {
-    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
-        .get_by_id(&id)
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone()))).get_by_id(&id)
 }
 
 #[uniffi::export]
-pub fn get_vocabulary_by_word_and_hash(word: String, sentence_hash: String) -> Result<Option<VocabularyEntry>, LumenError> {
+pub fn get_vocabulary_by_word_and_hash(
+    word: String,
+    sentence_hash: String,
+) -> Result<Option<VocabularyEntry>, LumenError> {
     VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
         .get_by_word_and_hash(&word, &sentence_hash)
 }
 
 #[uniffi::export]
 pub fn list_vocabulary() -> Result<Vec<VocabularyEntry>, LumenError> {
-    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
-        .list()
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone()))).list()
 }
 
 #[uniffi::export]
 pub fn delete_vocabulary(id: String) -> Result<(), LumenError> {
-    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
-        .delete(&id)
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone()))).delete(&id)
 }
 
 #[uniffi::export]
@@ -150,28 +154,29 @@ pub fn increment_vocabulary_query_count(id: String) -> Result<(), LumenError> {
 
 #[uniffi::export]
 pub fn update_vocabulary(req: UpdateVocabularyRequest) -> Result<VocabularyEntry, LumenError> {
-    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone())))
-        .update(req)
+    VocabularyUseCase::new(Arc::new(SqliteVocabularyRepo::new(pool()?.clone()))).update(req)
 }
 
 // ── PDF Document API ─────────────────────────────────────────────────────────
 
 #[uniffi::export]
 pub fn upsert_pdf_document(req: UpsertPdfRequest) -> Result<PdfDocument, LumenError> {
-    PdfDocumentUseCase::new(Arc::new(SqlitePdfDocumentRepo::new(pool()?.clone())))
-        .upsert(req)
+    PdfDocumentUseCase::new(Arc::new(SqlitePdfDocumentRepo::new(pool()?.clone()))).upsert(req)
 }
 
 #[uniffi::export]
-pub fn save_reading_position(file_path: String, page: u32, scroll_offset: f64) -> Result<(), LumenError> {
+pub fn save_reading_position(
+    file_path: String,
+    page: u32,
+    scroll_offset: f64,
+) -> Result<(), LumenError> {
     PdfDocumentUseCase::new(Arc::new(SqlitePdfDocumentRepo::new(pool()?.clone())))
         .save_reading_position(&file_path, page, scroll_offset)
 }
 
 #[uniffi::export]
 pub fn list_pdf_documents() -> Result<Vec<PdfDocument>, LumenError> {
-    PdfDocumentUseCase::new(Arc::new(SqlitePdfDocumentRepo::new(pool()?.clone())))
-        .list()
+    PdfDocumentUseCase::new(Arc::new(SqlitePdfDocumentRepo::new(pool()?.clone()))).list()
 }
 
 #[uniffi::export]

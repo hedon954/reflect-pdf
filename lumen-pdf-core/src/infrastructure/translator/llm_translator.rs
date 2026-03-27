@@ -1,7 +1,7 @@
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
 use crate::domain::translation::{entity::TranslationResult, repository::Translator};
 use crate::error::LumenError;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
 pub struct LlmConfig {
@@ -18,7 +18,10 @@ pub struct LlmTranslator {
 
 impl LlmTranslator {
     pub fn new(config: LlmConfig) -> Self {
-        Self { client: Client::new(), config }
+        Self {
+            client: Client::new(),
+            config,
+        }
     }
 
     fn build_prompt(&self, word: &str, sentence: &str) -> String {
@@ -94,7 +97,10 @@ struct LlmTranslationJson {
 #[async_trait::async_trait]
 impl Translator for LlmTranslator {
     async fn translate(&self, word: &str, sentence: &str) -> Result<TranslationResult, LumenError> {
-        let url = format!("{}/chat/completions", self.config.base_url.trim_end_matches('/'));
+        let url = format!(
+            "{}/chat/completions",
+            self.config.base_url.trim_end_matches('/')
+        );
         let body = ChatRequest {
             model: self.config.model.clone(),
             messages: vec![
@@ -104,13 +110,16 @@ impl Translator for LlmTranslator {
             response_format: ResponseFormat { kind: "json_object".into() },
         };
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(&url)
             .bearer_auth(&self.config.api_key)
             .json(&body)
             .send()
             .await
-            .map_err(|e| LumenError::LlmApiError { message: e.to_string() })?;
+            .map_err(|e| LumenError::LlmApiError {
+                message: e.to_string(),
+            })?;
 
         if !resp.status().is_success() {
             let status = resp.status();
@@ -120,15 +129,21 @@ impl Translator for LlmTranslator {
             });
         }
 
-        let chat: ChatResponse = resp.json().await
-            .map_err(|e| LumenError::LlmApiError { message: e.to_string() })?;
+        let chat: ChatResponse = resp.json().await.map_err(|e| LumenError::LlmApiError {
+            message: e.to_string(),
+        })?;
 
-        let content = chat.choices.into_iter().next()
+        let content = chat
+            .choices
+            .into_iter()
+            .next()
             .map(|c| c.message.content)
             .unwrap_or_default();
 
-        let parsed: LlmTranslationJson = serde_json::from_str(&content)
-            .map_err(|e| LumenError::SerializationError { message: e.to_string() })?;
+        let parsed: LlmTranslationJson =
+            serde_json::from_str(&content).map_err(|e| LumenError::SerializationError {
+                message: e.to_string(),
+            })?;
 
         Ok(TranslationResult {
             word: parsed.word.unwrap_or_else(|| word.to_string()),

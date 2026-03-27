@@ -1,11 +1,11 @@
+use super::DbPool;
 use crate::domain::vocabulary::{
-    entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest},
+    entity::{SaveVocabularyRequest, UpdateVocabularyRequest, VocabularyEntry},
     repository::VocabularyRepository,
 };
 use crate::error::LumenError;
-use super::DbPool;
-use uuid::Uuid;
 use chrono::Utc;
+use uuid::Uuid;
 
 pub struct SqliteVocabularyRepo {
     pool: DbPool,
@@ -61,13 +61,23 @@ impl VocabularyRepository for SqliteVocabularyRepo {
               query_count)
              VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,0)",
             rusqlite::params![
-                id, req.word, req.sentence, req.sentence_hash,
-                req.pdf_path, req.pdf_name, req.page_index,
-                req.selection_bounds, req.phonetic, req.part_of_speech,
-                req.context_translation, req.context_explanation,
-                req.general_definition, req.context_sentence_translation,
+                id,
+                req.word,
+                req.sentence,
+                req.sentence_hash,
+                req.pdf_path,
+                req.pdf_name,
+                req.page_index,
+                req.selection_bounds,
+                req.phonetic,
+                req.part_of_speech,
+                req.context_translation,
+                req.context_explanation,
+                req.general_definition,
+                req.context_sentence_translation,
                 req.translation_source,
-                req.annotation_id, now,
+                req.annotation_id,
+                now,
             ],
         )?;
         Ok(VocabularyEntry {
@@ -106,7 +116,11 @@ impl VocabularyRepository for SqliteVocabularyRepo {
         }
     }
 
-    fn get_by_word_and_hash(&self, word: &str, sentence_hash: &str) -> Result<Option<VocabularyEntry>, LumenError> {
+    fn get_by_word_and_hash(
+        &self,
+        word: &str,
+        sentence_hash: &str,
+    ) -> Result<Option<VocabularyEntry>, LumenError> {
         let conn = self.pool.get()?;
         let result = conn.query_row(
             &format!("SELECT {SELECT_COLS} FROM vocabulary_entries WHERE LOWER(word) = LOWER(?1) AND sentence_hash = ?2"),
@@ -122,17 +136,21 @@ impl VocabularyRepository for SqliteVocabularyRepo {
 
     fn list(&self) -> Result<Vec<VocabularyEntry>, LumenError> {
         let conn = self.pool.get()?;
-        let mut stmt = conn.prepare(
-            &format!("SELECT {SELECT_COLS} FROM vocabulary_entries ORDER BY created_at DESC"),
-        )?;
-        let entries = stmt.query_map([], row_to_entry)?
+        let mut stmt = conn.prepare(&format!(
+            "SELECT {SELECT_COLS} FROM vocabulary_entries ORDER BY created_at DESC"
+        ))?;
+        let entries = stmt
+            .query_map([], row_to_entry)?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(entries)
     }
 
     fn delete(&self, id: &str) -> Result<(), LumenError> {
         let conn = self.pool.get()?;
-        conn.execute("DELETE FROM vocabulary_entries WHERE id = ?1", rusqlite::params![id])?;
+        conn.execute(
+            "DELETE FROM vocabulary_entries WHERE id = ?1",
+            rusqlite::params![id],
+        )?;
         Ok(())
     }
 
@@ -162,13 +180,18 @@ impl VocabularyRepository for SqliteVocabularyRepo {
              context_sentence_translation = ?6
              WHERE id = ?7",
             rusqlite::params![
-                req.phonetic, req.part_of_speech,
-                req.context_translation, req.context_explanation,
-                req.general_definition, req.context_sentence_translation,
+                req.phonetic,
+                req.part_of_speech,
+                req.context_translation,
+                req.context_explanation,
+                req.general_definition,
+                req.context_sentence_translation,
                 req.id,
             ],
         )?;
         self.get_by_id(&req.id)?
-            .ok_or_else(|| LumenError::NotFound { message: format!("entry {} not found", req.id) })
+            .ok_or_else(|| LumenError::NotFound {
+                message: format!("entry {} not found", req.id),
+            })
     }
 }

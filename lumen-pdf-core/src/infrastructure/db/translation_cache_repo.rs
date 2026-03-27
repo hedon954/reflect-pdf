@@ -1,8 +1,10 @@
-use crate::domain::translation::{entity::TranslationResult, repository::TranslationCacheRepository};
-use crate::error::LumenError;
 use super::DbPool;
-use uuid::Uuid;
+use crate::domain::translation::{
+    entity::TranslationResult, repository::TranslationCacheRepository,
+};
+use crate::error::LumenError;
 use chrono::Utc;
+use uuid::Uuid;
 
 pub struct SqliteTranslationCacheRepo {
     pool: DbPool,
@@ -15,7 +17,11 @@ impl SqliteTranslationCacheRepo {
 }
 
 impl TranslationCacheRepository for SqliteTranslationCacheRepo {
-    fn get(&self, word: &str, sentence_hash: &str) -> Result<Option<TranslationResult>, LumenError> {
+    fn get(
+        &self,
+        word: &str,
+        sentence_hash: &str,
+    ) -> Result<Option<TranslationResult>, LumenError> {
         let conn = self.pool.get()?;
         let result = conn.query_row(
             "SELECT response_json FROM translation_cache WHERE word = ?1 AND sentence_hash = ?2",
@@ -29,8 +35,10 @@ impl TranslationCacheRepository for SqliteTranslationCacheRepo {
                     "UPDATE translation_cache SET hit_count = hit_count + 1 WHERE word = ?1 AND sentence_hash = ?2",
                     rusqlite::params![word, sentence_hash],
                 ).ok();
-                let r: TranslationResult = serde_json::from_str(&json)
-                    .map_err(|e| LumenError::SerializationError { message: e.to_string() })?;
+                let r: TranslationResult =
+                    serde_json::from_str(&json).map_err(|e| LumenError::SerializationError {
+                        message: e.to_string(),
+                    })?;
                 Ok(Some(r))
             }
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
@@ -38,7 +46,12 @@ impl TranslationCacheRepository for SqliteTranslationCacheRepo {
         }
     }
 
-    fn set(&self, word: &str, sentence_hash: &str, result: &TranslationResult) -> Result<(), LumenError> {
+    fn set(
+        &self,
+        word: &str,
+        sentence_hash: &str,
+        result: &TranslationResult,
+    ) -> Result<(), LumenError> {
         let conn = self.pool.get()?;
         let json = serde_json::to_string(result)?;
         conn.execute(

@@ -1,11 +1,11 @@
+use super::DbPool;
 use crate::domain::pdf_document::{
     entity::{PdfDocument, UpsertPdfRequest},
     repository::PdfDocumentRepository,
 };
 use crate::error::LumenError;
-use super::DbPool;
-use uuid::Uuid;
 use chrono::Utc;
+use uuid::Uuid;
 
 pub struct SqlitePdfDocumentRepo {
     pool: DbPool,
@@ -74,7 +74,12 @@ impl PdfDocumentRepository for SqlitePdfDocumentRepo {
         }
     }
 
-    fn save_reading_position(&self, file_path: &str, page: u32, scroll_offset: f64) -> Result<(), LumenError> {
+    fn save_reading_position(
+        &self,
+        file_path: &str,
+        page: u32,
+        scroll_offset: f64,
+    ) -> Result<(), LumenError> {
         let conn = self.pool.get()?;
         conn.execute(
             "UPDATE pdf_documents SET last_page = ?1, last_scroll_offset = ?2 WHERE file_path = ?3",
@@ -89,14 +94,18 @@ impl PdfDocumentRepository for SqlitePdfDocumentRepo {
             "SELECT id, file_path, file_name, total_pages, last_page, last_scroll_offset, opened_at, added_at
              FROM pdf_documents ORDER BY opened_at DESC",
         )?;
-        let docs = stmt.query_map([], row_to_doc)?
+        let docs = stmt
+            .query_map([], row_to_doc)?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(docs)
     }
 
     fn delete(&self, file_path: &str) -> Result<(), LumenError> {
         let conn = self.pool.get()?;
-        conn.execute("DELETE FROM pdf_documents WHERE file_path = ?1", rusqlite::params![file_path])?;
+        conn.execute(
+            "DELETE FROM pdf_documents WHERE file_path = ?1",
+            rusqlite::params![file_path],
+        )?;
         Ok(())
     }
 }

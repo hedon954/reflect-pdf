@@ -1,10 +1,10 @@
-use std::sync::Arc;
-use crate::error::LumenError;
 use crate::domain::translation::{
     entity::{TranslationRequest, TranslationResult},
     repository::{TranslationCacheRepository, Translator},
     service::TranslationDomainService,
 };
+use crate::error::LumenError;
+use std::sync::Arc;
 
 pub struct TranslationUseCase {
     service: TranslationDomainService,
@@ -21,7 +21,10 @@ impl TranslationUseCase {
         }
     }
 
-    pub async fn translate(&self, request: TranslationRequest) -> Result<TranslationResult, LumenError> {
+    pub async fn translate(
+        &self,
+        request: TranslationRequest,
+    ) -> Result<TranslationResult, LumenError> {
         self.service.translate(request).await
     }
 }

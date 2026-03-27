@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use crate::error::LumenError;
 use crate::domain::vocabulary::{
-    entity::{VocabularyEntry, SaveVocabularyRequest, UpdateVocabularyRequest},
+    entity::{SaveVocabularyRequest, UpdateVocabularyRequest, VocabularyEntry},
     repository::VocabularyRepository,
 };
+use crate::error::LumenError;
+use std::sync::Arc;
 
 pub struct VocabularyUseCase {
     repo: Arc<dyn VocabularyRepository>,
@@ -22,7 +22,11 @@ impl VocabularyUseCase {
         self.repo.get_by_id(id)
     }
 
-    pub fn get_by_word_and_hash(&self, word: &str, sentence_hash: &str) -> Result<Option<VocabularyEntry>, LumenError> {
+    pub fn get_by_word_and_hash(
+        &self,
+        word: &str,
+        sentence_hash: &str,
+    ) -> Result<Option<VocabularyEntry>, LumenError> {
         self.repo.get_by_word_and_hash(word, sentence_hash)
     }
 

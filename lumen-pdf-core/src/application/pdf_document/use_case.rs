@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use crate::error::LumenError;
 use crate::domain::pdf_document::{
     entity::{PdfDocument, UpsertPdfRequest},
     repository::PdfDocumentRepository,
 };
+use crate::error::LumenError;
+use std::sync::Arc;
 
 pub struct PdfDocumentUseCase {
     repo: Arc<dyn PdfDocumentRepository>,
@@ -18,8 +18,14 @@ impl PdfDocumentUseCase {
         self.repo.upsert(req)
     }
 
-    pub fn save_reading_position(&self, file_path: &str, page: u32, scroll_offset: f64) -> Result<(), LumenError> {
-        self.repo.save_reading_position(file_path, page, scroll_offset)
+    pub fn save_reading_position(
+        &self,
+        file_path: &str,
+        page: u32,
+        scroll_offset: f64,
+    ) -> Result<(), LumenError> {
+        self.repo
+            .save_reading_position(file_path, page, scroll_offset)
     }
 
     pub fn list(&self) -> Result<Vec<PdfDocument>, LumenError> {
