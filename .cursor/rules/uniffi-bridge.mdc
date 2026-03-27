@@ -8,24 +8,24 @@ alwaysApply: false
 
 ## 新增 API 的完整步骤
 
-1. **UDL 定义**（`src/interfaces/reflect_pdf_lib.udl`）：声明函数签名和数据类型
+1. **UDL 定义**（`src/interfaces/lumen_pdf_lib.udl`）：声明函数签名和数据类型
 2. **Rust 实现**（`src/interfaces/api.rs`）：加 `#[uniffi::export]` 并组装依赖
 3. **重新构建**：运行 `./scripts/build-rust.sh` 生成新的 Swift 绑定
-4. **Swift 封装**（`ReflectPDF/Services/BridgeService.swift`）：包装新 API
+4. **Swift 封装**（`LumenPDF/Services/BridgeService.swift`）：包装新 API
 
 ## UDL 类型对照
 
-| UDL | Rust | Swift |
-|-----|------|-------|
-| `string` | `String` | `String` |
-| `string?` | `Option<String>` | `String?` |
-| `u32` | `u32` | `UInt32` |
-| `f64` | `f64` | `Double` |
-| `boolean` | `bool` | `Bool` |
-| `sequence<T>` | `Vec<T>` | `[T]` |
-| `dictionary Foo { ... }` | `#[uniffi::Record] struct Foo` | `struct Foo` |
-| `[Async]` | `async fn` | `async` Swift 函数 |
-| `[Throws=ReflectError]` | `Result<T, ReflectError>` | `throws` |
+| UDL                      | Rust                           | Swift              |
+| ------------------------ | ------------------------------ | ------------------ |
+| `string`                 | `String`                       | `String`           |
+| `string?`                | `Option<String>`               | `String?`          |
+| `u32`                    | `u32`                          | `UInt32`           |
+| `f64`                    | `f64`                          | `Double`           |
+| `boolean`                | `bool`                         | `Bool`             |
+| `sequence<T>`            | `Vec<T>`                       | `[T]`              |
+| `dictionary Foo { ... }` | `#[uniffi::Record] struct Foo` | `struct Foo`       |
+| `[Async]`                | `async fn`                     | `async` Swift 函数 |
+| `[Throws=LumenError]`    | `Result<T, LumenError>`        | `throws`           |
 
 ## 注意事项
 

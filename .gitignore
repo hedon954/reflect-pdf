@@ -1,5 +1,5 @@
 # Rust
-/reflect-pdf-core/target/
+/lumen-pdf-core/target/
 Cargo.lock
 
 # Xcode
@@ -13,7 +13,7 @@ build/
 *.dSYM
 
 # Generated UniFFI bindings (rebuilt by build-rust.sh)
-ReflectPDF/Generated/
+LumenPDF/Generated/
 
 # macOS
 .DS_Store

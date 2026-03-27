@@ -1,0 +1,444 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0119D131113A230714D5CD47 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6C12CF122CFC6B2D8F29703A /* Assets.xcassets */; };
+		02FE8AA58A2C933872D7FD07 /* liblumen_pdf_core.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3599E7BF853D51936E3846E /* liblumen_pdf_core.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		17B36F3752C55AA48CD5CF6E /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30456747A47EDA8FF192E86 /* AudioService.swift */; };
+		1C3F37EC59BB1BE8D5741CB1 /* PDFOutlineSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */; };
+		1C681DA3081254BB263E8F16 /* TranslationErrorFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9455B1DE473E83A2F007CA8A /* TranslationErrorFormatter.swift */; };
+		1C9385AB37DED7A80952156F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C35D1760E464DF098B96BA0 /* ContentView.swift */; };
+		1F96E2C9EB6DF09B82636D06 /* liblumen_pdf_core.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B3599E7BF853D51936E3846E /* liblumen_pdf_core.dylib */; };
+		227D87F9BB1FF98F40250DB3 /* ContextSentenceFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C44664755D60B7F7B24EC2 /* ContextSentenceFormatting.swift */; };
+		3B63A5A4F5A49358E476AA66 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17802E6878B3BC2E978C1FD /* KeychainService.swift */; };
+		551AF0683BA0DAFDC3516777 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13492BDC4DA725FE25A5D0E0 /* SettingsView.swift */; };
+		87CE5880CD4E75DD60F6E9B5 /* LumenPDFApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DE73C3FA150EA718665E0D /* LumenPDFApp.swift */; };
+		889781B3CA4D361202EF50CE /* VocabularyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C2CBC2FC2C97838F3CF66 /* VocabularyListView.swift */; };
+		88A27A5FBAE170E7129ECDA0 /* lumen_pdf_core.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66707D7FBE286104B1A6B18B /* lumen_pdf_core.swift */; };
+		8E7481AD4E1A815BB4AEB4D5 /* ReadingSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85F64EEC2B886EAC5E5E97A1 /* ReadingSessionService.swift */; };
+		9C4BD32DDD9F6B6CE778BE5C /* PDFReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1FCA547E9B9BA8F0DDF020 /* PDFReaderView.swift */; };
+		B63D09D68AEE0E789554F411 /* liblumen_pdf_core.dylib in Resources */ = {isa = PBXBuildFile; fileRef = D4385B20D08AFF8EDA6917D4 /* liblumen_pdf_core.dylib */; };
+		DAC8AD21F59DDAEC5FA85181 /* LibrarySidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D122985A8763F10DD9F5BD /* LibrarySidebarView.swift */; };
+		DBDAC3CD17A627698FCAEC25 /* TranslationBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA68CECE0D2624711BB02CA /* TranslationBubble.swift */; };
+		E50479CFBF221F5C6F80EF39 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C088A980EA9509E6DF51CE95 /* AppState.swift */; };
+		F667E0746CD86CF36CB023AB /* BridgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C390E8BEDF6FAECBF5BA0A9 /* BridgeService.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9994A491815EA46DFDAE1793 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				02FE8AA58A2C933872D7FD07 /* liblumen_pdf_core.dylib in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0FA68CECE0D2624711BB02CA /* TranslationBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationBubble.swift; sourceTree = "<group>"; };
+		13492BDC4DA725FE25A5D0E0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2C390E8BEDF6FAECBF5BA0A9 /* BridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeService.swift; sourceTree = "<group>"; };
+		37C44664755D60B7F7B24EC2 /* ContextSentenceFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSentenceFormatting.swift; sourceTree = "<group>"; };
+		66707D7FBE286104B1A6B18B /* lumen_pdf_core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = lumen_pdf_core.swift; sourceTree = "<group>"; };
+		6C12CF122CFC6B2D8F29703A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7C35D1760E464DF098B96BA0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		85F64EEC2B886EAC5E5E97A1 /* ReadingSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionService.swift; sourceTree = "<group>"; };
+		8B1FCA547E9B9BA8F0DDF020 /* PDFReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReaderView.swift; sourceTree = "<group>"; };
+		9455B1DE473E83A2F007CA8A /* TranslationErrorFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationErrorFormatter.swift; sourceTree = "<group>"; };
+		9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFOutlineSidebarView.swift; sourceTree = "<group>"; };
+		B3599E7BF853D51936E3846E /* liblumen_pdf_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblumen_pdf_core.dylib; path = Generated/liblumen_pdf_core.dylib; sourceTree = "<group>"; };
+		B82C2CBC2FC2C97838F3CF66 /* VocabularyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocabularyListView.swift; sourceTree = "<group>"; };
+		C088A980EA9509E6DF51CE95 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		D0D122985A8763F10DD9F5BD /* LibrarySidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebarView.swift; sourceTree = "<group>"; };
+		D17802E6878B3BC2E978C1FD /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		D4385B20D08AFF8EDA6917D4 /* liblumen_pdf_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = liblumen_pdf_core.dylib; sourceTree = "<group>"; };
+		D67CD223FAC344083BD90268 /* LumenPDF.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LumenPDF.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E30456747A47EDA8FF192E86 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		EB0A11076F930C9DB154A809 /* lumen_pdf_coreFFI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lumen_pdf_coreFFI.h; sourceTree = "<group>"; };
+		F5DE73C3FA150EA718665E0D /* LumenPDFApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LumenPDFApp.swift; sourceTree = "<group>"; };
+		FBBAC5036198ED637E8F277F /* lumen_pdf_coreFFI.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = lumen_pdf_coreFFI.modulemap; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B96592414D13F42F6E58697F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F96E2C9EB6DF09B82636D06 /* liblumen_pdf_core.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		48AB3008D5AD04318348097B = {
+			isa = PBXGroup;
+			children = (
+				6C12CF122CFC6B2D8F29703A /* Assets.xcassets */,
+				642009238FB130EA043AFCD6 /* App */,
+				B3A93BC1FB4876ABA4CEC134 /* Generated */,
+				6907B8CAAE2035930FFC0065 /* Services */,
+				BC382ADF1E94197521AEA927 /* Views */,
+				BAEF9B7A146FEDDBB2F08D2D /* Frameworks */,
+				7B6B2A2A5EF40F6CD44A6710 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		642009238FB130EA043AFCD6 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C088A980EA9509E6DF51CE95 /* AppState.swift */,
+				F5DE73C3FA150EA718665E0D /* LumenPDFApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		6907B8CAAE2035930FFC0065 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E30456747A47EDA8FF192E86 /* AudioService.swift */,
+				2C390E8BEDF6FAECBF5BA0A9 /* BridgeService.swift */,
+				D17802E6878B3BC2E978C1FD /* KeychainService.swift */,
+				85F64EEC2B886EAC5E5E97A1 /* ReadingSessionService.swift */,
+				9455B1DE473E83A2F007CA8A /* TranslationErrorFormatter.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		7B6B2A2A5EF40F6CD44A6710 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D67CD223FAC344083BD90268 /* LumenPDF.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B3A93BC1FB4876ABA4CEC134 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				D4385B20D08AFF8EDA6917D4 /* liblumen_pdf_core.dylib */,
+				66707D7FBE286104B1A6B18B /* lumen_pdf_core.swift */,
+				EB0A11076F930C9DB154A809 /* lumen_pdf_coreFFI.h */,
+				FBBAC5036198ED637E8F277F /* lumen_pdf_coreFFI.modulemap */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		BAEF9B7A146FEDDBB2F08D2D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B3599E7BF853D51936E3846E /* liblumen_pdf_core.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		BC382ADF1E94197521AEA927 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7C35D1760E464DF098B96BA0 /* ContentView.swift */,
+				37C44664755D60B7F7B24EC2 /* ContextSentenceFormatting.swift */,
+				D0D122985A8763F10DD9F5BD /* LibrarySidebarView.swift */,
+				9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */,
+				8B1FCA547E9B9BA8F0DDF020 /* PDFReaderView.swift */,
+				13492BDC4DA725FE25A5D0E0 /* SettingsView.swift */,
+				0FA68CECE0D2624711BB02CA /* TranslationBubble.swift */,
+				B82C2CBC2FC2C97838F3CF66 /* VocabularyListView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C99E0F60B084662AE0BC16A2 /* LumenPDF */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FD1C71309EE784E05E62BBE5 /* Build configuration list for PBXNativeTarget "LumenPDF" */;
+			buildPhases = (
+				D0CE9034E9724DB357D9A479 /* Sources */,
+				E6789184B62D0FDAE5426046 /* Resources */,
+				B96592414D13F42F6E58697F /* Frameworks */,
+				9994A491815EA46DFDAE1793 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LumenPDF;
+			packageProductDependencies = (
+			);
+			productName = LumenPDF;
+			productReference = D67CD223FAC344083BD90268 /* LumenPDF.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CD73490924260613536965BA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C99E0F60B084662AE0BC16A2 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 6162BAEA4BA7514AC802A646 /* Build configuration list for PBXProject "LumenPDF" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 48AB3008D5AD04318348097B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7B6B2A2A5EF40F6CD44A6710 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C99E0F60B084662AE0BC16A2 /* LumenPDF */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E6789184B62D0FDAE5426046 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0119D131113A230714D5CD47 /* Assets.xcassets in Resources */,
+				B63D09D68AEE0E789554F411 /* liblumen_pdf_core.dylib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D0CE9034E9724DB357D9A479 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E50479CFBF221F5C6F80EF39 /* AppState.swift in Sources */,
+				17B36F3752C55AA48CD5CF6E /* AudioService.swift in Sources */,
+				F667E0746CD86CF36CB023AB /* BridgeService.swift in Sources */,
+				1C9385AB37DED7A80952156F /* ContentView.swift in Sources */,
+				227D87F9BB1FF98F40250DB3 /* ContextSentenceFormatting.swift in Sources */,
+				3B63A5A4F5A49358E476AA66 /* KeychainService.swift in Sources */,
+				DAC8AD21F59DDAEC5FA85181 /* LibrarySidebarView.swift in Sources */,
+				1C3F37EC59BB1BE8D5741CB1 /* PDFOutlineSidebarView.swift in Sources */,
+				9C4BD32DDD9F6B6CE778BE5C /* PDFReaderView.swift in Sources */,
+				8E7481AD4E1A815BB4AEB4D5 /* ReadingSessionService.swift in Sources */,
+				87CE5880CD4E75DD60F6E9B5 /* LumenPDFApp.swift in Sources */,
+				551AF0683BA0DAFDC3516777 /* SettingsView.swift in Sources */,
+				DBDAC3CD17A627698FCAEC25 /* TranslationBubble.swift in Sources */,
+				1C681DA3081254BB263E8F16 /* TranslationErrorFormatter.swift in Sources */,
+				889781B3CA4D361202EF50CE /* VocabularyListView.swift in Sources */,
+				88A27A5FBAE170E7129ECDA0 /* lumen_pdf_core.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		32A6BFFC7277F4174C0F50CE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		3DCAEB0F1DABF2CC0F539EBA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LumenPDF.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Generated\"",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
+				OTHER_LDFLAGS = "$(inherited) -llumen_pdf_core";
+				OTHER_SWIFT_FLAGS = "$(inherited) -Xcc -fmodule-map-file=$(SRCROOT)/Generated/lumen_pdf_coreFFI.modulemap";
+				PRODUCT_BUNDLE_IDENTIFIER = com.LumenPDF.app;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4808AC775873141D7941795E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = LumenPDF.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Generated\"",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(inherited) $(SRCROOT)/Generated";
+				OTHER_LDFLAGS = "$(inherited) -llumen_pdf_core";
+				OTHER_SWIFT_FLAGS = "$(inherited) -Xcc -fmodule-map-file=$(SRCROOT)/Generated/lumen_pdf_coreFFI.modulemap";
+				PRODUCT_BUNDLE_IDENTIFIER = com.LumenPDF.app;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		B2F5DD1552FC33F7587DAB65 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6162BAEA4BA7514AC802A646 /* Build configuration list for PBXProject "LumenPDF" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2F5DD1552FC33F7587DAB65 /* Debug */,
+				32A6BFFC7277F4174C0F50CE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FD1C71309EE784E05E62BBE5 /* Build configuration list for PBXNativeTarget "LumenPDF" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4808AC775873141D7941795E /* Debug */,
+				3DCAEB0F1DABF2CC0F539EBA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CD73490924260613536965BA /* Project object */;
+}

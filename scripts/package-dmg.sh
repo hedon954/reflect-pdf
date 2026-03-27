@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# 将 ReflectPDF 打包为可分发的 .dmg 文件
+# 将 LumenPDF 打包为可分发的 .dmg 文件
 #
 # 用法：
 #   ./scripts/package-dmg.sh                    # 本地开发包（不签名）
 #   TEAM_ID=XXXXXXXXXX ./scripts/package-dmg.sh # 使用 Developer ID 签名
 #
-# 产物：build/ReflectPDF-<version>.dmg
+# 产物：build/LumenPDF-<version>.dmg
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR/.."
-CRATE_DIR="$ROOT_DIR/reflect-pdf-core"
-XCODE_DIR="$ROOT_DIR/ReflectPDF"
+CRATE_DIR="$ROOT_DIR/lumen-pdf-core"
+XCODE_DIR="$ROOT_DIR/LumenPDF"
 BUILD_DIR="$ROOT_DIR/build"
 GENERATED_DIR="$XCODE_DIR/Generated"
 
-APP_NAME="ReflectPDF"
-BUNDLE_ID="com.reflectpdf.app"
+APP_NAME="LumenPDF"
+BUNDLE_ID="com.LumenPDF.app"
 VERSION="${VERSION:-1.0.0}"
 ARCHIVE_PATH="$BUILD_DIR/$APP_NAME.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
@@ -27,7 +27,7 @@ DMG_PATH="$BUILD_DIR/${APP_NAME}-${VERSION}.dmg"
 TEAM_ID="${TEAM_ID:-}"
 
 echo "╔══════════════════════════════════════════╗"
-echo "║   ReflectPDF DMG 打包脚本                ║"
+echo "║   LumenPDF DMG 打包脚本                ║"
 echo "╚══════════════════════════════════════════╝"
 echo "版本: $VERSION"
 echo "产物: $DMG_PATH"
@@ -59,16 +59,16 @@ cargo build --release --target x86_64-apple-darwin
 TARGET_DIR="$(cargo metadata --no-deps --format-version 1 \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['target_directory'])")"
 
-ARM_DYLIB="$TARGET_DIR/aarch64-apple-darwin/release/libreflect_pdf_core.dylib"
-X86_DYLIB="$TARGET_DIR/x86_64-apple-darwin/release/libreflect_pdf_core.dylib"
-UNIVERSAL_DYLIB="$TARGET_DIR/libreflect_pdf_core.dylib"
+ARM_DYLIB="$TARGET_DIR/aarch64-apple-darwin/release/liblumen_pdf_core.dylib"
+X86_DYLIB="$TARGET_DIR/x86_64-apple-darwin/release/liblumen_pdf_core.dylib"
+UNIVERSAL_DYLIB="$TARGET_DIR/liblumen_pdf_core.dylib"
 
 lipo -create "$ARM_DYLIB" "$X86_DYLIB" -output "$UNIVERSAL_DYLIB"
 echo "   ✓ Universal dylib: $UNIVERSAL_DYLIB"
 
 # 将 install_name 改为 @rpath 相对路径，否则链接后二进制会硬编码构建机器的绝对路径
-install_name_tool -id "@rpath/libreflect_pdf_core.dylib" "$UNIVERSAL_DYLIB"
-echo "   ✓ install_name → @rpath/libreflect_pdf_core.dylib"
+install_name_tool -id "@rpath/liblumen_pdf_core.dylib" "$UNIVERSAL_DYLIB"
+echo "   ✓ install_name → @rpath/liblumen_pdf_core.dylib"
 
 # 生成 UniFFI Swift 绑定（使用 arm64 release 产物）
 echo "→ [2/5] 生成 UniFFI Swift 绑定..."
@@ -77,7 +77,7 @@ cargo run --bin uniffi-bindgen generate \
     --library "$ARM_DYLIB" \
     --language swift \
     --out-dir "$GENERATED_DIR"
-cp "$UNIVERSAL_DYLIB" "$GENERATED_DIR/libreflect_pdf_core.dylib"
+cp "$UNIVERSAL_DYLIB" "$GENERATED_DIR/liblumen_pdf_core.dylib"
 echo "   ✓ 绑定已生成至 $GENERATED_DIR"
 
 # ── 2. xcodebuild archive ────────────────────────────────────────────────────
@@ -164,13 +164,13 @@ FRAMEWORKS_DIR="$APP_PATH/Contents/Frameworks"
 BINARY="$APP_PATH/Contents/MacOS/$APP_NAME"
 
 mkdir -p "$FRAMEWORKS_DIR"
-cp "$UNIVERSAL_DYLIB" "$FRAMEWORKS_DIR/libreflect_pdf_core.dylib"
+cp "$UNIVERSAL_DYLIB" "$FRAMEWORKS_DIR/liblumen_pdf_core.dylib"
 
 # 如果二进制的 LC_LOAD_DYLIB 仍是绝对路径（xcodebuild 时 install_name 未生效），强制改为 @rpath
-OLD_REF=$(otool -L "$BINARY" | awk '/libreflect_pdf_core/{print $1}' | head -1)
-if [[ -n "$OLD_REF" && "$OLD_REF" != "@rpath/libreflect_pdf_core.dylib" ]]; then
-    install_name_tool -change "$OLD_REF" "@rpath/libreflect_pdf_core.dylib" "$BINARY"
-    echo "   ✓ 修正 binary 引用: $OLD_REF → @rpath/libreflect_pdf_core.dylib"
+OLD_REF=$(otool -L "$BINARY" | awk '/liblumen_pdf_core/{print $1}' | head -1)
+if [[ -n "$OLD_REF" && "$OLD_REF" != "@rpath/liblumen_pdf_core.dylib" ]]; then
+    install_name_tool -change "$OLD_REF" "@rpath/liblumen_pdf_core.dylib" "$BINARY"
+    echo "   ✓ 修正 binary 引用: $OLD_REF → @rpath/liblumen_pdf_core.dylib"
 fi
 
 # 确保 rpath 包含 @executable_path/../Frameworks（多次 add 会静默报错，用 || true 忽略）
@@ -182,7 +182,7 @@ if [ -n "$TEAM_ID" ]; then
 else
     SIGN_IDENTITY="-"
 fi
-codesign --force --sign "$SIGN_IDENTITY" "$FRAMEWORKS_DIR/libreflect_pdf_core.dylib"
+codesign --force --sign "$SIGN_IDENTITY" "$FRAMEWORKS_DIR/liblumen_pdf_core.dylib"
 codesign --force --deep --sign "$SIGN_IDENTITY" "$APP_PATH"
 echo "   ✓ 已重签名"
 

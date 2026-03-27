@@ -17,7 +17,7 @@ alwaysApply: false
 ```rust
 // ✅ 正确：domain 只知道 trait
 pub trait Translator: Send + Sync {
-    async fn translate(&self, word: &str, sentence: &str) -> Result<TranslationResult, ReflectError>;
+    async fn translate(&self, word: &str, sentence: &str) -> Result<TranslationResult, LumenError>;
 }
 
 // ❌ 错误：domain 直接用 reqwest
@@ -58,10 +58,10 @@ mod tests {
     // Fake 缓存：内存 HashMap
     struct FakeCache(Mutex<std::collections::HashMap<String, TranslationResult>>);
     impl TranslationCacheRepository for FakeCache {
-        fn get(&self, word: &str, hash: &str) -> Result<Option<TranslationResult>, ReflectError> {
+        fn get(&self, word: &str, hash: &str) -> Result<Option<TranslationResult>, LumenError> {
             Ok(self.0.lock().unwrap().get(&format!("{word}:{hash}")).cloned())
         }
-        fn set(&self, word: &str, hash: &str, r: &TranslationResult) -> Result<(), ReflectError> {
+        fn set(&self, word: &str, hash: &str, r: &TranslationResult) -> Result<(), LumenError> {
             self.0.lock().unwrap().insert(format!("{word}:{hash}"), r.clone());
             Ok(())
         }
@@ -71,7 +71,7 @@ mod tests {
     struct FakeLlm;
     #[async_trait::async_trait]
     impl Translator for FakeLlm {
-        async fn translate(&self, word: &str, _: &str) -> Result<TranslationResult, ReflectError> {
+        async fn translate(&self, word: &str, _: &str) -> Result<TranslationResult, LumenError> {
             Ok(TranslationResult { word: word.to_string(), source: "llm".to_string(), ..Default::default() })
         }
     }
@@ -80,8 +80,8 @@ mod tests {
     struct FailingLlm;
     #[async_trait::async_trait]
     impl Translator for FailingLlm {
-        async fn translate(&self, _: &str, _: &str) -> Result<TranslationResult, ReflectError> {
-            Err(ReflectError::LlmApiError("timeout".to_string()))
+        async fn translate(&self, _: &str, _: &str) -> Result<TranslationResult, LumenError> {
+            Err(LumenError::LlmApiError("timeout".to_string()))
         }
     }
 
@@ -98,26 +98,26 @@ mod tests {
 
 ### 覆盖要求
 
-| 模块 | 必须测试的场景 |
-|------|--------------|
+| 模块                     | 必须测试的场景                                           |
+| ------------------------ | -------------------------------------------------------- |
 | `translation/service.rs` | 缓存命中、LLM 成功写缓存、LLM 失败触发兜底、兜底不写缓存 |
-| `vocabulary/` 实体 | 值对象校验（如坐标合法性）|
-| `pdf_document/` 实体 | 滚动偏移范围（0.0–1.0）|
+| `vocabulary/` 实体       | 值对象校验（如坐标合法性）                               |
+| `pdf_document/` 实体     | 滚动偏移范围（0.0–1.0）                                  |
 
 CI 会单独运行 `cargo test domain` 验证覆盖，**任何 domain 测试失败都阻断合并**。
 
 ## 错误处理
 
-- 统一使用 `crate::error::ReflectError`（thiserror 定义）
+- 统一使用 `crate::error::LumenError`（thiserror 定义）
 - 用 `?` 传播，不用 `.unwrap()`（测试除外）
 - 跨语言的错误需标注 `#[uniffi::Error]`
 
 ## 命名约定
 
-| 类型 | 命名 |
-|------|------|
-| 实体 | `VocabularyEntry`、`PdfDocument` |
+| 类型             | 命名                                            |
+| ---------------- | ----------------------------------------------- |
+| 实体             | `VocabularyEntry`、`PdfDocument`                |
 | Repository trait | `VocabularyRepository`、`PdfDocumentRepository` |
-| SQLite 实现 | `SqliteVocabularyRepo`、`SqlitePdfDocumentRepo` |
-| Use Case | `VocabularyUseCase`、`PdfDocumentUseCase` |
-| Domain Service | `TranslationDomainService` |
+| SQLite 实现      | `SqliteVocabularyRepo`、`SqlitePdfDocumentRepo` |
+| Use Case         | `VocabularyUseCase`、`PdfDocumentUseCase`       |
+| Domain Service   | `TranslationDomainService`                      |

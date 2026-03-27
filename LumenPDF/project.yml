@@ -1,0 +1,48 @@
+name: LumenPDF
+# 用法：cd LumenPDF && xcodegen generate
+options:
+  bundleIdPrefix: com.LumenPDF
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  LumenPDF:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+      - path: Views
+      - path: Services
+      - path: Generated
+        optional: true
+      - path: Assets.xcassets
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.LumenPDF.app
+        INFOPLIST_FILE: Info.plist
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        OTHER_LDFLAGS: "$(inherited) -llumen_pdf_core"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
+        # 让 Swift 编译器找到 UniFFI 生成的 C 模块 (lumen_pdf_coreFFI)
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -fmodule-map-file=$(SRCROOT)/Generated/lumen_pdf_coreFFI.modulemap"
+    # 将 Rust dylib 作为 framework 依赖嵌入，xcodegen 会生成正确的 Embed Frameworks build phase
+    dependencies:
+      - framework: Generated/liblumen_pdf_core.dylib
+        embed: true
+        codeSign: true
+    entitlements:
+      path: LumenPDF.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.network.client: true

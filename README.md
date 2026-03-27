@@ -1,4 +1,4 @@
-# ReflectPDF
+# LumenPDF
 
 > 为深度阅读者设计的 macOS 智能 PDF 工具——像系统预览一样流畅，但支持**上下文感知翻译**、**原生高亮 / 划线标注**与**知识永久沉淀**。
 
@@ -55,12 +55,12 @@
 
 ```bash
 # 克隆并进入项目
-git clone https://github.com/yourname/reflect-pdf.git
-cd reflect-pdf
+git clone https://github.com/yourname/lumen-pdf.git
+cd lumen-pdf
 
 # 生成 Xcode 工程（首次）
 brew install xcodegen
-cd ReflectPDF && xcodegen generate && cd ..
+cd LumenPDF && xcodegen generate && cd ..
 
 # 一键打包 DMG
 make dmg
@@ -68,11 +68,11 @@ make dmg
 # ./scripts/package-dmg.sh
 ```
 
-产物路径：`build/ReflectPDF-1.0.0.dmg`
+产物路径：`build/LumenPDF-1.0.0.dmg`
 
-打开 DMG → 将 `ReflectPDF.app` 拖入 `Applications` 文件夹即可。
+打开 DMG → 将 `LumenPDF.app` 拖入 `Applications` 文件夹即可。
 
-> **首次打开提示"无法验证开发者"**：这是 macOS Gatekeeper 的正常提示，不是病毒警告。在 Finder 中**右键点击** `ReflectPDF.app` → 选择「打开」→ 弹窗中再点击「打开」即可。此后双击直接运行，无需重复此步骤。
+> **首次打开提示"无法验证开发者"**：这是 macOS Gatekeeper 的正常提示，不是病毒警告。在 Finder 中**右键点击** `LumenPDF.app` → 选择「打开」→ 弹窗中再点击「打开」即可。此后双击直接运行，无需重复此步骤。
 
 #### 使用 Developer ID 正式签名（可分发给他人）
 
@@ -90,21 +90,21 @@ TEAM_ID=XXXXXXXXXX make dmg
 
 ```bash
 # 提交公证（替换占位符）
-xcrun notarytool submit build/ReflectPDF-1.0.0.dmg \
+xcrun notarytool submit build/LumenPDF-1.0.0.dmg \
     --apple-id "your@email.com" \
     --team-id "XXXXXXXXXX" \
     --password "@keychain:AC_PASSWORD" \
     --wait
 
 # 公证通过后装订票据到 DMG
-xcrun stapler staple build/ReflectPDF-1.0.0.dmg
+xcrun stapler staple build/LumenPDF-1.0.0.dmg
 ```
 
 #### 指定版本号
 
 ```bash
 VERSION=2.0.0 make dmg
-# 产物：build/ReflectPDF-2.0.0.dmg
+# 产物：build/LumenPDF-2.0.0.dmg
 ```
 
 ### 方式三：从源码构建（开发调试）
@@ -122,8 +122,8 @@ VERSION=2.0.0 make dmg
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourname/reflect-pdf.git
-cd reflect-pdf
+git clone https://github.com/yourname/lumen-pdf.git
+cd lumen-pdf
 
 # 2. 安装工具依赖
 brew install xcodegen
@@ -133,10 +133,10 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 ./scripts/build-rust.sh
 
 # 4. 生成 Xcode 工程（首次或 project.yml 变更时）
-cd ReflectPDF && xcodegen generate && cd ..
+cd LumenPDF && xcodegen generate && cd ..
 
 # 5. 打开 Xcode 编译运行
-open ReflectPDF/ReflectPDF.xcodeproj
+open LumenPDF/LumenPDF.xcodeproj
 # 选择 My Mac 目标 → ⌘R 运行
 ```
 
@@ -235,7 +235,7 @@ Rust — DDD 分层架构
 
 | 数据                     | 位置                                               |
 | ------------------------ | -------------------------------------------------- |
-| SQLite 数据库            | `~/Library/Application Support/ReflectPDF/data.db` |
+| SQLite 数据库            | `~/Library/Application Support/LumenPDF/data.db` |
 | API Key                  | macOS Keychain                                     |
 | 上次打开文件路径         | `UserDefaults`                                     |
 | Security-Scoped Bookmark | `UserDefaults["bm_<filePath>"]`                    |
@@ -245,14 +245,14 @@ Rust — DDD 分层架构
 ## 项目结构
 
 ```
-reflect-pdf/
-├── reflect-pdf-core/       Rust 后端（DDD）
+lumen-pdf/
+├── lumen-pdf-core/         Rust 后端（DDD）
 │   └── src/
 │       ├── interfaces/     UniFFI 导出
 │       ├── application/    用例层
 │       ├── domain/         领域层（纯逻辑，无 I/O）
 │       └── infrastructure/ SQLite + HTTP 实现
-├── ReflectPDF/             Swift 前端
+├── LumenPDF/               Swift 前端
 │   ├── App/                AppState（全局状态）
 │   ├── Views/              SwiftUI 视图
 │   ├── Services/           BridgeService / AudioService 等

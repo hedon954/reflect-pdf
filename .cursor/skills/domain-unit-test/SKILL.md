@@ -1,6 +1,6 @@
 ---
 name: domain-unit-test
-description: 为 ReflectPDF 的 Rust domain 层编写单元测试。当新增或修改 domain/service.rs、domain/entity.rs 时必须同步补充测试。测试不得依赖任何 I/O（无 SQLite、无 HTTP、无文件系统）。
+description: 为 LumenPDF 的 Rust domain 层编写单元测试。当新增或修改 domain/service.rs、domain/entity.rs 时必须同步补充测试。测试不得依赖任何 I/O（无 SQLite、无 HTTP、无文件系统）。
 ---
 
 # 领域层单元测试
@@ -26,10 +26,10 @@ impl FakeCache {
 }
 
 impl TranslationCacheRepository for FakeCache {
-    fn get(&self, word: &str, hash: &str) -> Result<Option<TranslationResult>, ReflectError> {
+    fn get(&self, word: &str, hash: &str) -> Result<Option<TranslationResult>, LumenError> {
         Ok(self.0.lock().unwrap().get(&key(word, hash)).cloned())
     }
-    fn set(&self, word: &str, hash: &str, r: &TranslationResult) -> Result<(), ReflectError> {
+    fn set(&self, word: &str, hash: &str, r: &TranslationResult) -> Result<(), LumenError> {
         self.0.lock().unwrap().insert(key(word, hash), r.clone());
         Ok(())
     }
@@ -45,7 +45,7 @@ struct FakeTranslator { source: &'static str }
 
 #[async_trait::async_trait]
 impl Translator for FakeTranslator {
-    async fn translate(&self, word: &str, _: &str) -> Result<TranslationResult, ReflectError> {
+    async fn translate(&self, word: &str, _: &str) -> Result<TranslationResult, LumenError> {
         Ok(TranslationResult {
             word: word.to_string(),
             source: self.source.to_string(),
@@ -60,8 +60,8 @@ impl Translator for FakeTranslator {
 struct AlwaysFailTranslator;
 #[async_trait::async_trait]
 impl Translator for AlwaysFailTranslator {
-    async fn translate(&self, _: &str, _: &str) -> Result<TranslationResult, ReflectError> {
-        Err(ReflectError::LlmApiError("simulated failure".to_string()))
+    async fn translate(&self, _: &str, _: &str) -> Result<TranslationResult, LumenError> {
+        Err(LumenError::LlmApiError("simulated failure".to_string()))
     }
 }
 ```
@@ -72,17 +72,17 @@ impl Translator for AlwaysFailTranslator {
 struct FakeVocabRepo(Mutex<Vec<VocabularyEntry>>);
 
 impl VocabularyRepository for FakeVocabRepo {
-    fn save(&self, entry: &VocabularyEntry) -> Result<String, ReflectError> {
+    fn save(&self, entry: &VocabularyEntry) -> Result<String, LumenError> {
         self.0.lock().unwrap().push(entry.clone());
         Ok(entry.id.clone())
     }
-    fn find_by_id(&self, id: &str) -> Result<Option<VocabularyEntry>, ReflectError> {
+    fn find_by_id(&self, id: &str) -> Result<Option<VocabularyEntry>, LumenError> {
         Ok(self.0.lock().unwrap().iter().find(|e| e.id == id).cloned())
     }
-    fn list_all(&self) -> Result<Vec<VocabularyEntry>, ReflectError> {
+    fn list_all(&self) -> Result<Vec<VocabularyEntry>, LumenError> {
         Ok(self.0.lock().unwrap().clone())
     }
-    fn delete(&self, id: &str) -> Result<(), ReflectError> {
+    fn delete(&self, id: &str) -> Result<(), LumenError> {
         self.0.lock().unwrap().retain(|e| e.id != id);
         Ok(())
     }

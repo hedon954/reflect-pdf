@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'   # 触发：git tag v1.0.0 && git push --tags
+      - "v*" # 触发：git tag v1.0.0 && git push --tags
 
 env:
   CARGO_TERM_COLOR: always
@@ -24,41 +24,41 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: reflect-pdf-core
+          workspaces: lumen-pdf-core
 
       - name: Install xcodegen
         run: brew install xcodegen
 
       # ── 编译双架构 ──────────────────────────────────────────────────────────
       - name: Build aarch64 (Apple Silicon)
-        working-directory: reflect-pdf-core
+        working-directory: lumen-pdf-core
         run: cargo build --release --target aarch64-apple-darwin
 
       - name: Build x86_64 (Intel)
-        working-directory: reflect-pdf-core
+        working-directory: lumen-pdf-core
         run: cargo build --release --target x86_64-apple-darwin
 
       # ── 合并 Universal Binary ───────────────────────────────────────────────
       - name: Merge into Universal Binary
         run: |
           lipo -create \
-            reflect-pdf-core/target/aarch64-apple-darwin/release/libreflect_pdf_core.dylib \
-            reflect-pdf-core/target/x86_64-apple-darwin/release/libreflect_pdf_core.dylib \
-            -output libreflect_pdf_core.dylib
-          lipo -info libreflect_pdf_core.dylib
+            lumen-pdf-core/target/aarch64-apple-darwin/release/liblumen_pdf_core.dylib \
+            lumen-pdf-core/target/x86_64-apple-darwin/release/liblumen_pdf_core.dylib \
+            -output liblumen_pdf_core.dylib
+          lipo -info liblumen_pdf_core.dylib
 
       # ── 生成 Swift 绑定 ─────────────────────────────────────────────────────
       - name: Generate UniFFI Swift bindings
-        working-directory: reflect-pdf-core
+        working-directory: lumen-pdf-core
         run: |
           cargo run --bin uniffi-bindgen generate \
-            --library target/aarch64-apple-darwin/release/libreflect_pdf_core.dylib \
+            --library target/aarch64-apple-darwin/release/liblumen_pdf_core.dylib \
             --language swift \
-            --out-dir ../ReflectPDF/Generated
+            --out-dir ../LumenPDF/Generated
 
       # ── 生成 Xcode 项目 ─────────────────────────────────────────────────────
       - name: Generate Xcode project
-        run: cd ReflectPDF && xcodegen generate
+        run: cd LumenPDF && xcodegen generate
 
       # ── 构建 macOS App ──────────────────────────────────────────────────────
       - name: Select Xcode
@@ -67,10 +67,10 @@ jobs:
       - name: Archive App
         run: |
           xcodebuild archive \
-            -project ReflectPDF/ReflectPDF.xcodeproj \
-            -scheme ReflectPDF \
+            -project LumenPDF/LumenPDF.xcodeproj \
+            -scheme LumenPDF \
             -destination 'platform=macOS' \
-            -archivePath build/ReflectPDF.xcarchive \
+            -archivePath build/LumenPDF.xcarchive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
@@ -78,22 +78,22 @@ jobs:
       - name: Export App
         run: |
           xcodebuild -exportArchive \
-            -archivePath build/ReflectPDF.xcarchive \
+            -archivePath build/LumenPDF.xcarchive \
             -exportPath build/export \
             -exportOptionsPlist scripts/ExportOptions.plist
 
       - name: Zip App bundle
         run: |
           cd build/export
-          zip -r ../../ReflectPDF-${{ github.ref_name }}.zip ReflectPDF.app
+          zip -r ../../LumenPDF-${{ github.ref_name }}.zip LumenPDF.app
 
       # ── 发布 GitHub Release ─────────────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ReflectPDF-${{ github.ref_name }}.zip
-            libreflect_pdf_core.dylib
+            LumenPDF-${{ github.ref_name }}.zip
+            liblumen_pdf_core.dylib
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-latest
     defaults:
       run:
-        working-directory: reflect-pdf-core
+        working-directory: lumen-pdf-core
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,7 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: reflect-pdf-core
+          workspaces: lumen-pdf-core
 
       - name: fmt
         run: cargo fmt --all -- --check
@@ -63,7 +63,7 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: reflect-pdf-core
+          workspaces: lumen-pdf-core
 
       - name: Install xcodegen
         run: brew install xcodegen
@@ -72,7 +72,7 @@ jobs:
         run: ./scripts/build-rust.sh
 
       - name: Generate Xcode project
-        run: cd ReflectPDF && xcodegen generate
+        run: cd LumenPDF && xcodegen generate
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
@@ -80,8 +80,8 @@ jobs:
       - name: Build (no signing)
         run: |
           xcodebuild build \
-            -project ReflectPDF/ReflectPDF.xcodeproj \
-            -scheme ReflectPDF \
+            -project LumenPDF/LumenPDF.xcodeproj \
+            -scheme LumenPDF \
             -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
