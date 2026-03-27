@@ -109,8 +109,7 @@ xcodebuild archive \
     -destination "generic/platform=macOS" \
     SKIP_INSTALL=NO \
     BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-    "${SIGN_ARGS[@]}" \
-    | grep -E "^(Build|error:|warning:|Archive)" || true
+    "${SIGN_ARGS[@]}"
 
 if [ ! -d "$ARCHIVE_PATH" ]; then
     echo "✗ archive 失败，请检查 Xcode 输出"
@@ -142,8 +141,7 @@ PLIST
     xcodebuild -exportArchive \
         -archivePath "$ARCHIVE_PATH" \
         -exportPath "$EXPORT_DIR" \
-        -exportOptionsPlist "$EXPORT_PLIST" \
-        | grep -E "^(Export|error:)" || true
+        -exportOptionsPlist "$EXPORT_PLIST"
     rm -f "$EXPORT_PLIST"
 else
     # 直接从 archive 复制 .app（跳过 exportArchive，避免签名校验）
