@@ -40,6 +40,7 @@ struct TranslationBubble: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.18), radius: 14, x: 0, y: 6)
         .frame(width: 380)
+        .frame(maxHeight: 680) // Upper bound for long content
     }
 
     // MARK: - Header (AppKit drag handle)

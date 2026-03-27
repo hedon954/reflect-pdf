@@ -7,6 +7,8 @@ struct ContentView: View {
     @State private var showLibrary = false
     @State private var showSetupSheet = false
     @AppStorage("llm_base_url") private var baseURL = ""
+    @AppStorage("llm_model") private var model = ""
+    @AppStorage("llm_setup_never_remind") private var neverRemind = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
@@ -119,13 +121,14 @@ struct ContentView: View {
             }
         }
         .onAppear {
+            // Show LLM setup sheet if not configured (and user didn't opt "never remind")
             let storedKey = KeychainService.load(key: "llm_api_key") ?? ""
-            if baseURL.isEmpty || storedKey.isEmpty {
+            if !neverRemind, baseURL.isEmpty || storedKey.isEmpty || model.isEmpty {
                 showSetupSheet = true
             }
         }
         .sheet(isPresented: $showSetupSheet) {
-            SettingsView()
+            SettingsView(onDismiss: { showSetupSheet = false })
                 .environmentObject(appState)
         }
     }

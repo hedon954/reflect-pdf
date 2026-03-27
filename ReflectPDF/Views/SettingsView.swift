@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct SettingsView: View {
+    /// When non-nil, this view is shown as a setup sheet; the closure is called to dismiss it.
+    var onDismiss: (() -> Void)? = nil
+
     @EnvironmentObject private var appState: AppState
     @AppStorage("llm_base_url") private var baseURL = ""
     @AppStorage("llm_model") private var model = ""
@@ -32,13 +35,31 @@ struct SettingsView: View {
             }
 
             HStack {
+                // Extra buttons only shown in setup-sheet mode
+                if let dismiss = onDismiss {
+                    Button("稍后设置") {
+                        dismiss()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+
+                    Button("永不提醒") {
+                        UserDefaults.standard.set(true, forKey: "llm_setup_never_remind")
+                        dismiss()
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                }
+
                 Spacer()
+
                 if showSavedBadge {
                     Label("已保存", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 }
                 Button("保存设置") {
                     saveSettings()
+                    onDismiss?()
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -63,3 +84,4 @@ struct SettingsView: View {
         }
     }
 }
+
