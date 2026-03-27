@@ -15,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -87,6 +90,16 @@ jobs:
           cd build/export
           zip -r ../../LumenPDF-${{ github.ref_name }}.zip LumenPDF.app
 
+      # ── 生成 Changelog ──────────────────────────────────────────────────────
+      - name: Generate changelog with git-cliff
+        id: git-cliff
+        uses: orhun/git-cliff-action@v3
+        with:
+          config: cliff.toml
+          args: -vv --latest --strip header
+        env:
+          OUTPUT: NEW_CHANGELOG.md
+
       # ── 发布 GitHub Release ─────────────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -94,6 +107,28 @@ jobs:
           files: |
             LumenPDF-${{ github.ref_name }}.zip
             liblumen_pdf_core.dylib
-          generate_release_notes: true
+          body: ${{ steps.git-cliff.outputs.content }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 更新 CHANGELOG.md 并推送（放在 release 之后）───────────────────────
+      - name: Update CHANGELOG.md
+        run: |
+          git fetch origin main:main
+          git checkout main
+          if [ -f "CHANGELOG.md" ]; then
+            head -n 1 CHANGELOG.md > TEMP_CHANGELOG.md
+            echo "" >> TEMP_CHANGELOG.md
+            cat NEW_CHANGELOG.md >> TEMP_CHANGELOG.md
+            tail -n +2 CHANGELOG.md >> TEMP_CHANGELOG.md
+            mv TEMP_CHANGELOG.md CHANGELOG.md
+          else
+            mv NEW_CHANGELOG.md CHANGELOG.md
+          fi
+          rm -f NEW_CHANGELOG.md
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md
+          git commit -m "chore(release): update CHANGELOG.md for ${{ github.ref_name }}"
+          git push origin main
+        if: steps.git-cliff.outputs.content != ''
