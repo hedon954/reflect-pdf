@@ -34,6 +34,7 @@ targets:
         LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
         HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/Generated"
         # 让 Swift 编译器找到 UniFFI 生成的 C 模块 (lumen_pdf_coreFFI)
+        SWIFT_INCLUDE_PATHS: "$(SRCROOT)/Generated"
         OTHER_SWIFT_FLAGS: "$(inherited) -Xcc -fmodule-map-file=$(SRCROOT)/Generated/lumen_pdf_coreFFI.modulemap"
     # 将 Rust dylib 作为 framework 依赖嵌入，xcodegen 会生成正确的 Embed Frameworks build phase
     dependencies:
