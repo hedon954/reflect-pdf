@@ -23,6 +23,8 @@ targets:
       - path: Services
       - path: Generated
         optional: true
+      - path: Assets.xcassets
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.reflectpdf.app

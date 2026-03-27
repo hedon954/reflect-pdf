@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0119D131113A230714D5CD47 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6C12CF122CFC6B2D8F29703A /* Assets.xcassets */; };
 		02FE8AA58A2C933872D7FD07 /* libreflect_pdf_core.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3599E7BF853D51936E3846E /* libreflect_pdf_core.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		17B36F3752C55AA48CD5CF6E /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30456747A47EDA8FF192E86 /* AudioService.swift */; };
 		1C3F37EC59BB1BE8D5741CB1 /* PDFOutlineSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E1387D2237BDF6D8A550B66 /* PDFOutlineSidebarView.swift */; };
@@ -48,6 +49,7 @@
 		2C390E8BEDF6FAECBF5BA0A9 /* BridgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeService.swift; sourceTree = "<group>"; };
 		37C44664755D60B7F7B24EC2 /* ContextSentenceFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSentenceFormatting.swift; sourceTree = "<group>"; };
 		66707D7FBE286104B1A6B18B /* reflect_pdf_core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = reflect_pdf_core.swift; sourceTree = "<group>"; };
+		6C12CF122CFC6B2D8F29703A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7C35D1760E464DF098B96BA0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		85F64EEC2B886EAC5E5E97A1 /* ReadingSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionService.swift; sourceTree = "<group>"; };
 		8B1FCA547E9B9BA8F0DDF020 /* PDFReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFReaderView.swift; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 		48AB3008D5AD04318348097B = {
 			isa = PBXGroup;
 			children = (
+				6C12CF122CFC6B2D8F29703A /* Assets.xcassets */,
 				642009238FB130EA043AFCD6 /* App */,
 				B3A93BC1FB4876ABA4CEC134 /* Generated */,
 				6907B8CAAE2035930FFC0065 /* Services */,
@@ -215,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0119D131113A230714D5CD47 /* Assets.xcassets in Resources */,
 				B63D09D68AEE0E789554F411 /* libreflect_pdf_core.dylib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
