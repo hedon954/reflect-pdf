@@ -44,11 +44,12 @@ jobs:
       # ── 合并 Universal Binary ───────────────────────────────────────────────
       - name: Merge into Universal Binary
         run: |
+          mkdir -p LumenPDF/Generated
           lipo -create \
             lumen-pdf-core/target/aarch64-apple-darwin/release/liblumen_pdf_core.dylib \
             lumen-pdf-core/target/x86_64-apple-darwin/release/liblumen_pdf_core.dylib \
-            -output liblumen_pdf_core.dylib
-          lipo -info liblumen_pdf_core.dylib
+            -output LumenPDF/Generated/liblumen_pdf_core.dylib
+          lipo -info LumenPDF/Generated/liblumen_pdf_core.dylib
 
       # ── 生成 Swift 绑定 ─────────────────────────────────────────────────────
       - name: Generate UniFFI Swift bindings
@@ -106,7 +107,7 @@ jobs:
         with:
           files: |
             LumenPDF-${{ github.ref_name }}.zip
-            liblumen_pdf_core.dylib
+            LumenPDF/Generated/liblumen_pdf_core.dylib
           body: ${{ steps.git-cliff.outputs.content }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
