@@ -654,7 +654,7 @@ struct PDFKitView: NSViewRepresentable {
 
             let annType: PDFAnnotationSubtype = typeStr == "underline" ? .underline : .highlight
             let color: NSColor = typeStr == "underline"
-                ? NSColor(red: 1.0, green: 0.23, blue: 0.19, alpha: 0.85)
+                ? NSColor.systemRed
                 : NSColor.systemYellow.withAlphaComponent(0.5)
             let tag = typeStr == "underline" ? "__fu" : "__fh"
             let undoLabel = typeStr == "underline" ? "划线" : "高亮"
@@ -781,7 +781,7 @@ struct PDFKitView: NSViewRepresentable {
             // 使用笔记 ID 作为 userName，方便后续删除
             for rect in lineRects {
                 let ann = PDFAnnotation(bounds: rect, forType: .underline, withProperties: nil)
-                ann.color = NSColor(red: 1.0, green: 0.23, blue: 0.19, alpha: 0.85)
+                ann.color = NSColor.systemRed
                 ann.userName = noteId
                 ann.contents = "note:\(noteId)"
                 page.addAnnotation(ann)
