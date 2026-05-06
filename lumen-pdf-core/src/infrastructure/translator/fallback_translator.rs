@@ -2,19 +2,22 @@ use crate::domain::translation::{entity::TranslationResult, repository::Translat
 use crate::error::LumenError;
 use reqwest::Client;
 use serde::Deserialize;
+use std::sync::OnceLock;
+
+static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+
+fn shared_client() -> &'static Client {
+    HTTP_CLIENT.get_or_init(Client::new)
+}
 
 #[allow(unused)]
 pub struct FallbackTranslator {
-    client: Client,
     target_lang: String,
 }
 
 impl FallbackTranslator {
     pub fn new(target_lang: String) -> Self {
-        Self {
-            client: Client::new(),
-            target_lang,
-        }
+        Self { target_lang }
     }
 
     fn lang_code(&self) -> &str {
@@ -37,20 +40,20 @@ struct ResponseData {
 #[async_trait::async_trait]
 impl Translator for FallbackTranslator {
     async fn translate(&self, word: &str, sentence: &str) -> Result<TranslationResult, LumenError> {
-        let url = format!(
+        let word_url = format!(
             "https://api.mymemory.translated.net/get?q={}&langpair=en|{}",
             urlencoding::encode(word),
             self.lang_code(),
         );
+        let sentence_tr_fut = Self::translate_chunk(sentence, self.lang_code());
+        let word_resp_fut = shared_client().get(&word_url).send();
 
-        let resp =
-            self.client
-                .get(&url)
-                .send()
-                .await
-                .map_err(|e| LumenError::FallbackApiError {
-                    message: e.to_string(),
-                })?;
+        // Fire both requests in parallel
+        let (word_resp, sentence_tr) = tokio::join!(word_resp_fut, sentence_tr_fut);
+
+        let resp = word_resp.map_err(|e| LumenError::FallbackApiError {
+            message: e.to_string(),
+        })?;
 
         if !resp.status().is_success() {
             return Err(LumenError::FallbackApiError {
@@ -65,9 +68,6 @@ impl Translator for FallbackTranslator {
                     message: e.to_string(),
                 })?;
 
-        // Second call: full sentence translation (MyMemory ~500 char practical limit)
-        let sentence_tr = Self::translate_chunk(&self.client, sentence, self.lang_code()).await;
-
         Ok(TranslationResult {
             word: word.to_string(),
             context_translation: data.response_data.translated_text.clone(),
@@ -80,7 +80,7 @@ impl Translator for FallbackTranslator {
 }
 
 impl FallbackTranslator {
-    async fn translate_chunk(client: &Client, text: &str, lang: &str) -> String {
+    async fn translate_chunk(text: &str, lang: &str) -> String {
         let trimmed = text.trim();
         if trimmed.is_empty() {
             return String::new();
@@ -92,7 +92,7 @@ impl FallbackTranslator {
             urlencoding::encode(&q),
             lang,
         );
-        let Ok(resp) = client.get(&url).send().await else {
+        let Ok(resp) = shared_client().get(&url).send().await else {
             return String::new();
         };
         if !resp.status().is_success() {

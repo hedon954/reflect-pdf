@@ -2,6 +2,17 @@ use crate::domain::translation::{entity::TranslationResult, repository::Translat
 use crate::error::LumenError;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
+
+/// A single shared HTTP client reused across all translation requests.
+/// `reqwest::Client` internally maintains a connection pool and TLS session
+/// cache, so recreating it on every call forces a new TCP + TLS handshake each
+/// time — the primary cause of slow translations.
+static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+
+fn shared_client() -> &'static Client {
+    HTTP_CLIENT.get_or_init(Client::new)
+}
 
 #[derive(Clone)]
 pub struct LlmConfig {
@@ -12,16 +23,12 @@ pub struct LlmConfig {
 }
 
 pub struct LlmTranslator {
-    client: Client,
     config: LlmConfig,
 }
 
 impl LlmTranslator {
     pub fn new(config: LlmConfig) -> Self {
-        Self {
-            client: Client::new(),
-            config,
-        }
+        Self { config }
     }
 
     fn build_prompt(&self, word: &str, sentence: &str) -> String {
@@ -94,8 +101,7 @@ Respond with ONLY valid JSON in this exact format:
             },
         };
 
-        let resp = self
-            .client
+        let resp = shared_client()
             .post(&url)
             .bearer_auth(&self.config.api_key)
             .json(&body)
@@ -199,8 +205,7 @@ impl Translator for LlmTranslator {
             response_format: ResponseFormat { kind: "json_object".into() },
         };
 
-        let resp = self
-            .client
+        let resp = shared_client()
             .post(&url)
             .bearer_auth(&self.config.api_key)
             .json(&body)
