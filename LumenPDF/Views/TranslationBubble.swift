@@ -103,29 +103,36 @@ struct TranslationBubble: View {
 
     @ViewBuilder
     private var content: some View {
-        if isLoading {
-            HStack(spacing: 8) {
-                SpinnerView()
-                Text("翻译中…").font(.callout).foregroundStyle(.secondary)
-            }
-            .padding(14)
-        } else if let result = request.result {
-            // Check if this is a complete failure (both LLM and Fallback failed)
+        // While streaming, show the partial result as soon as ANY field is
+        // populated. Falling back to the full spinner only when we have
+        // nothing to display avoids the awkward "blank → 5 s → everything"
+        // transition the non-streaming version produced.
+        if let result = request.result, Self.hasAnyContent(result) {
             if result.isCompleteFailure {
                 completeFailureView(result: result)
             } else {
+                if isLoading {
+                    streamingBanner
+                }
                 ViewThatFits(in: .vertical) {
                     contentBody(result: result)
                     ScrollView { contentBody(result: result) }
                         .frame(maxHeight: 520)
                 }
 
-                // Error section (LLM error, and/or Fallback error)
                 errorSection(result: result)
 
-                Divider()
-                footer(result: result)
+                if !isLoading {
+                    Divider()
+                    footer(result: result)
+                }
             }
+        } else if isLoading {
+            HStack(spacing: 8) {
+                SpinnerView()
+                Text("翻译中…").font(.callout).foregroundStyle(.secondary)
+            }
+            .padding(14)
         } else {
             VStack(alignment: .leading, spacing: 0) {
                 Text("翻译未完成")
@@ -156,6 +163,34 @@ struct TranslationBubble: View {
             }
             .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
         }
+    }
+
+    // MARK: - Streaming banner
+
+    /// Slim header rendered above the content while the LLM is still
+    /// streaming. Lets the user see early fields while keeping a clear
+    /// "still loading" affordance.
+    private var streamingBanner: some View {
+        HStack(spacing: 6) {
+            SpinnerView()
+            Text("正在生成…").font(.caption).foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 10)
+    }
+
+    /// Returns true if the result has at least one user-visible field filled
+    /// in (anything other than `word` alone, since `word` defaults to the
+    /// selection text and is always present).
+    private static func hasAnyContent(_ r: TranslationResult) -> Bool {
+        !r.phonetic.isEmpty
+            || !r.partOfSpeech.isEmpty
+            || !r.contextTranslation.isEmpty
+            || !r.contextExplanation.isEmpty
+            || !r.generalDefinition.isEmpty
+            || !r.contextSentenceTranslation.isEmpty
+            || r.isCompleteFailure
     }
 
     // MARK: - Complete failure view

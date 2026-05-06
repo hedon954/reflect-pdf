@@ -358,33 +358,51 @@ struct PDFReaderView: View {
         )
         isTranslating = true
 
+        // Track which translation request this Task belongs to, so a delayed
+        // streaming callback from a previous selection can't overwrite the
+        // bubble of a fresh one (user dismissed and selected something else).
+        let requestId = translationRequest?.id
+
         Task {
+            // Updates the bubble's `result` field as fields stream in.
+            // Captured by both streaming-mode branches below.
+            @MainActor func applyPartial(_ partial: TranslationResult) {
+                guard var req = translationRequest, req.id == requestId else { return }
+                req.result = partial
+                req.translationError = nil
+                translationRequest = req
+            }
+
             do {
                 let result: TranslationResult
                 if isSentenceMode {
-                    // Sentence mode: translate the selection directly
-                    result = try await BridgeService.shared.translateSentence(sentence: word)
+                    result = try await BridgeService.shared.translateSentenceStreaming(
+                        sentence: word,
+                        onPartial: { partial in applyPartial(partial) }
+                    )
                 } else {
-                    // Word mode: check for existing entry first
                     let hash = session.sentenceHash(sentence)
                     let existingEntry = try? BridgeService.shared.getVocabularyByWordAndHash(
                         word: word, sentenceHash: hash
                     )
                     if let e = existingEntry { BridgeService.shared.incrementQueryCount(id: e.id) }
 
-                    // Update the request with existing entry ID
                     await MainActor.run {
-                        if var req = translationRequest {
+                        if var req = translationRequest, req.id == requestId {
                             req.existingEntryId = existingEntry?.id
                             translationRequest = req
                         }
                     }
 
-                    result = try await BridgeService.shared.translate(word: word, sentence: sentence)
+                    result = try await BridgeService.shared.translateStreaming(
+                        word: word,
+                        sentence: sentence,
+                        onPartial: { partial in applyPartial(partial) }
+                    )
                 }
 
                 await MainActor.run {
-                    guard var req = translationRequest else { return }
+                    guard var req = translationRequest, req.id == requestId else { return }
                     req.result = result
                     req.translationError = nil
                     translationRequest = req
@@ -392,7 +410,7 @@ struct PDFReaderView: View {
                 }
             } catch {
                 await MainActor.run {
-                    guard var req = translationRequest else { return }
+                    guard var req = translationRequest, req.id == requestId else { return }
                     var detail = TranslationErrorFormatter.userMessage(from: error)
                     if detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         detail = "翻译失败：\(String(describing: error))"

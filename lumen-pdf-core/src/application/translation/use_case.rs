@@ -1,6 +1,6 @@
 use crate::domain::translation::{
     entity::{TranslationRequest, TranslationResult},
-    repository::{TranslationCacheRepository, Translator},
+    repository::{StreamProgress, TranslationCacheRepository, Translator},
     service::TranslationDomainService,
 };
 use crate::error::LumenError;
@@ -26,5 +26,13 @@ impl TranslationUseCase {
         request: TranslationRequest,
     ) -> Result<TranslationResult, LumenError> {
         self.service.translate(request).await
+    }
+
+    pub async fn translate_streaming(
+        &self,
+        request: TranslationRequest,
+        on_progress: StreamProgress,
+    ) -> Result<TranslationResult, LumenError> {
+        self.service.translate_streaming(request, on_progress).await
     }
 }

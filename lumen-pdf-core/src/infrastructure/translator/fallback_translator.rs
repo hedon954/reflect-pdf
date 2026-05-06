@@ -1,14 +1,7 @@
 use crate::domain::translation::{entity::TranslationResult, repository::Translator};
 use crate::error::LumenError;
-use reqwest::Client;
+use crate::infrastructure::translator::http_client::shared_client;
 use serde::Deserialize;
-use std::sync::OnceLock;
-
-static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
-
-fn shared_client() -> &'static Client {
-    HTTP_CLIENT.get_or_init(Client::new)
-}
 
 #[allow(unused)]
 pub struct FallbackTranslator {

@@ -111,6 +111,41 @@ pub async fn translate(request: TranslationRequest) -> Result<TranslationResult,
         .await
 }
 
+/// Foreign-implemented callback used by streaming translation APIs to publish
+/// partial `TranslationResult`s as soon as individual JSON fields finish
+/// streaming from the LLM. Called many times per request, finally with the
+/// fully-populated result. Implementations should marshal to the UI thread
+/// and update the bubble; do not block.
+#[uniffi::export(with_foreign)]
+pub trait TranslationStreamCallback: Send + Sync {
+    fn on_progress(&self, partial: TranslationResult);
+}
+
+/// Streaming variant of `translate`. Returns the same final `TranslationResult`
+/// as `translate`, but invokes `callback.on_progress` repeatedly while the
+/// response streams in. Cache hits emit exactly once.
+#[uniffi::export(async_runtime = "tokio")]
+pub async fn translate_streaming(
+    request: TranslationRequest,
+    callback: Arc<dyn TranslationStreamCallback>,
+) -> Result<TranslationResult, LumenError> {
+    let pool = pool()?;
+    let config = llm_config()?;
+
+    let cache = Arc::new(SqliteTranslationCacheRepo::new(pool.clone()));
+    let llm = Arc::new(LlmTranslator::new(config.clone()));
+    let fallback = Arc::new(FallbackTranslator::new(config.target_language.clone()));
+
+    let on_progress: crate::domain::translation::repository::StreamProgress = {
+        let cb = callback.clone();
+        Box::new(move |partial| cb.on_progress(partial))
+    };
+
+    TranslationUseCase::new(cache, llm, fallback)
+        .translate_streaming(request, on_progress)
+        .await
+}
+
 /// Translate a full sentence without word-level analysis.
 /// Use this when the user selects a phrase/sentence instead of a single word.
 #[uniffi::export(async_runtime = "tokio")]
@@ -120,6 +155,40 @@ pub async fn translate_sentence(sentence: String) -> Result<TranslationResult, L
 
     // Use LLM to translate the sentence directly
     let translation = llm.translate_sentence(&sentence).await?;
+
+    Ok(TranslationResult {
+        word: sentence.clone(),
+        phonetic: String::new(),
+        part_of_speech: String::new(),
+        context_translation: String::new(),
+        context_explanation: String::new(),
+        general_definition: String::new(),
+        context_sentence_translation: translation,
+        source: "llm".to_string(),
+        llm_error_message: String::new(),
+        fallback_error_message: String::new(),
+        is_complete_failure: false,
+    })
+}
+
+/// Streaming sentence translation. The callback fires repeatedly with partial
+/// `TranslationResult`s containing the in-progress `context_sentence_translation`.
+#[uniffi::export(async_runtime = "tokio")]
+pub async fn translate_sentence_streaming(
+    sentence: String,
+    callback: Arc<dyn TranslationStreamCallback>,
+) -> Result<TranslationResult, LumenError> {
+    let config = llm_config()?;
+    let llm = LlmTranslator::new(config.clone());
+
+    let on_progress: crate::domain::translation::repository::StreamProgress = {
+        let cb = callback.clone();
+        Box::new(move |partial| cb.on_progress(partial))
+    };
+
+    let translation = llm
+        .translate_sentence_streaming(&sentence, on_progress)
+        .await?;
 
     Ok(TranslationResult {
         word: sentence.clone(),

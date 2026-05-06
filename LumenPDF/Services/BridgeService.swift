@@ -76,6 +76,34 @@ final class BridgeService {
         try await LumenPDF.translateSentence(sentence: sentence)
     }
 
+    /// Streaming word-level translation. `onPartial` fires repeatedly on
+    /// `MainActor` while fields stream in; the returned `TranslationResult`
+    /// is the final, complete result (also matching the last `onPartial`).
+    func translateStreaming(
+        word: String,
+        sentence: String,
+        onPartial: @escaping @MainActor (TranslationResult) -> Void
+    ) async throws -> TranslationResult {
+        let receiver = TranslationStreamReceiver(onPartial: onPartial)
+        return try await LumenPDF.translateStreaming(
+            request: TranslationRequest(word: word, sentence: sentence),
+            callback: receiver
+        )
+    }
+
+    /// Streaming sentence translation. `onPartial` fires as soon as any
+    /// `context_sentence_translation` text is available.
+    func translateSentenceStreaming(
+        sentence: String,
+        onPartial: @escaping @MainActor (TranslationResult) -> Void
+    ) async throws -> TranslationResult {
+        let receiver = TranslationStreamReceiver(onPartial: onPartial)
+        return try await LumenPDF.translateSentenceStreaming(
+            sentence: sentence,
+            callback: receiver
+        )
+    }
+
     // MARK: - Vocabulary
 
     @discardableResult
@@ -190,5 +218,25 @@ final class BridgeService {
 
     func exportNotesMarkdown(pdfPath: String? = nil) -> String {
         (try? _exportNotesMarkdown(pdfPath)) ?? "# 笔记导出\n\n暂无笔记。"
+    }
+}
+
+// MARK: - Streaming receiver
+
+/// Adapter from UniFFI's `TranslationStreamCallback` protocol to a Swift
+/// `@MainActor` closure. Rust may invoke `onProgress` on any thread (the
+/// streaming consumer task), so we hop to `MainActor` before touching UI.
+private final class TranslationStreamReceiver: TranslationStreamCallback {
+    private let onPartial: @MainActor (TranslationResult) -> Void
+
+    init(onPartial: @escaping @MainActor (TranslationResult) -> Void) {
+        self.onPartial = onPartial
+    }
+
+    func onProgress(partial: TranslationResult) {
+        let snapshot = partial
+        Task { @MainActor in
+            self.onPartial(snapshot)
+        }
     }
 }
