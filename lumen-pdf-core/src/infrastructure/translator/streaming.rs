@@ -163,6 +163,86 @@ fn skip_ws(bytes: &[u8], mut i: usize) -> usize {
     i
 }
 
+/// Returns the in-progress value of `key` as the LLM streams it, even before
+/// the closing quote arrives. `None` means the key hasn't been seen yet, or
+/// its opening quote hasn't started.
+///
+/// Use this when you have a known schema with one specific field whose value
+/// you want to render *as it streams in* (e.g. `"translation"` for sentence
+/// translation). For the general "wait until each field completes" mode, use
+/// `extract_complete_string_fields` instead.
+///
+/// The returned string already has JSON escapes resolved.
+pub fn extract_streaming_string_value(buf: &str, key: &str) -> Option<String> {
+    // Locate the key. We use a literal `"key"` match because in OpenAI-style
+    // JSON output keys never contain escapes, and false positives (e.g. the
+    // key string appearing inside another value) are not a concern in our
+    // narrow schema.
+    let needle = format!("\"{key}\"");
+    let key_idx = buf.find(&needle)?;
+    let bytes = buf.as_bytes();
+    let mut i = key_idx + needle.len();
+    i = skip_ws(bytes, i);
+    if i >= bytes.len() || bytes[i] != b':' {
+        return None;
+    }
+    i = skip_ws(bytes, i + 1);
+    if i >= bytes.len() || bytes[i] != b'"' {
+        return None;
+    }
+    Some(read_json_string_partial(buf, i + 1))
+}
+
+/// Read a JSON string starting at `start` (byte AFTER the opening quote)
+/// and return whatever has been received so far — the closing quote may or
+/// may not have arrived yet.
+fn read_json_string_partial(buf: &str, start: usize) -> String {
+    let mut out = String::new();
+    let mut chars = buf[start..].char_indices();
+    while let Some((_, c)) = chars.next() {
+        match c {
+            '"' => return out,
+            '\\' => {
+                let Some((_, esc)) = chars.next() else {
+                    // Trailing `\` with no escape kind yet — drop it; the
+                    // next chunk will deliver the rest. Returning what we
+                    // have so far is fine because the caller compares
+                    // against the previous emit and will simply not re-fire
+                    // until something new shows up.
+                    return out;
+                };
+                match esc {
+                    '"' => out.push('"'),
+                    '\\' => out.push('\\'),
+                    '/' => out.push('/'),
+                    'b' => out.push('\u{0008}'),
+                    'f' => out.push('\u{000C}'),
+                    'n' => out.push('\n'),
+                    'r' => out.push('\r'),
+                    't' => out.push('\t'),
+                    'u' => {
+                        let mut hex = String::with_capacity(4);
+                        for _ in 0..4 {
+                            let Some((_, hc)) = chars.next() else {
+                                return out;
+                            };
+                            hex.push(hc);
+                        }
+                        if let Ok(cp) = u32::from_str_radix(&hex, 16) {
+                            if let Some(ch) = char::from_u32(cp) {
+                                out.push(ch);
+                            }
+                        }
+                    }
+                    other => out.push(other),
+                }
+            }
+            other => out.push(other),
+        }
+    }
+    out
+}
+
 /// Read a JSON string from `buf` starting at byte offset `start` (i.e. the
 /// byte AFTER the opening quote). Returns `(decoded, byte_index_after_closing_quote)`,
 /// or `None` if the closing quote hasn't been received yet.
@@ -297,6 +377,80 @@ mod tests {
         // Second half: completes the previous line.
         let out2 = acc.feed("tial\"}}]}\n\n");
         assert_eq!(out2.content_deltas, "partial");
+    }
+
+    #[test]
+    fn streaming_value_returns_partial_when_unclosed() {
+        let buf = r#"{"translation": "你好世"#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some("你好世".to_string())
+        );
+    }
+
+    #[test]
+    fn streaming_value_returns_complete_when_closed() {
+        let buf = r#"{"translation": "你好世界"}"#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some("你好世界".to_string())
+        );
+    }
+
+    #[test]
+    fn streaming_value_handles_escapes_mid_stream() {
+        // Escaped quote inside the value, no closing quote yet.
+        let buf = r#"{"translation": "She said \"hi"#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some(r#"She said "hi"#.to_string())
+        );
+    }
+
+    #[test]
+    fn streaming_value_handles_unicode_escape() {
+        let buf = r#"{"translation": "\u4f60\u597d"#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some("你好".to_string())
+        );
+    }
+
+    #[test]
+    fn streaming_value_handles_dangling_backslash() {
+        // The model just emitted `\` and we haven't seen the escape kind yet.
+        let buf = r#"{"translation": "hello\"#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some("hello".to_string())
+        );
+    }
+
+    #[test]
+    fn streaming_value_returns_none_when_key_missing() {
+        let buf = r#"{"other": "x""#;
+        assert!(extract_streaming_string_value(buf, "translation").is_none());
+    }
+
+    #[test]
+    fn streaming_value_returns_none_when_value_not_started() {
+        let buf = r#"{"translation""#;
+        assert!(extract_streaming_string_value(buf, "translation").is_none());
+        let buf2 = r#"{"translation":"#;
+        assert!(extract_streaming_string_value(buf2, "translation").is_none());
+        // Whitespace allowed after `:`.
+        let buf3 = r#"{"translation": "#;
+        assert!(extract_streaming_string_value(buf3, "translation").is_none());
+    }
+
+    #[test]
+    fn streaming_value_returns_empty_when_value_just_started() {
+        // Opening quote received but no characters yet — empty string.
+        let buf = r#"{"translation": ""#;
+        assert_eq!(
+            extract_streaming_string_value(buf, "translation"),
+            Some(String::new())
+        );
     }
 
     #[test]

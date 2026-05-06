@@ -148,31 +148,18 @@ pub async fn translate_streaming(
 
 /// Translate a full sentence without word-level analysis.
 /// Use this when the user selects a phrase/sentence instead of a single word.
+/// Long / complex sentences also come back with a `sentence_breakdown`.
 #[uniffi::export(async_runtime = "tokio")]
 pub async fn translate_sentence(sentence: String) -> Result<TranslationResult, LumenError> {
     let config = llm_config()?;
     let llm = LlmTranslator::new(config.clone());
-
-    // Use LLM to translate the sentence directly
-    let translation = llm.translate_sentence(&sentence).await?;
-
-    Ok(TranslationResult {
-        word: sentence.clone(),
-        phonetic: String::new(),
-        part_of_speech: String::new(),
-        context_translation: String::new(),
-        context_explanation: String::new(),
-        general_definition: String::new(),
-        context_sentence_translation: translation,
-        source: "llm".to_string(),
-        llm_error_message: String::new(),
-        fallback_error_message: String::new(),
-        is_complete_failure: false,
-    })
+    llm.translate_sentence(&sentence).await
 }
 
 /// Streaming sentence translation. The callback fires repeatedly with partial
-/// `TranslationResult`s containing the in-progress `context_sentence_translation`.
+/// `TranslationResult`s containing the in-progress `context_sentence_translation`,
+/// then a final emit with `sentence_breakdown` filled in (for long / complex
+/// sentences). Short / simple sentences come back with an empty breakdown.
 #[uniffi::export(async_runtime = "tokio")]
 pub async fn translate_sentence_streaming(
     sentence: String,
@@ -186,23 +173,8 @@ pub async fn translate_sentence_streaming(
         Box::new(move |partial| cb.on_progress(partial))
     };
 
-    let translation = llm
-        .translate_sentence_streaming(&sentence, on_progress)
-        .await?;
-
-    Ok(TranslationResult {
-        word: sentence.clone(),
-        phonetic: String::new(),
-        part_of_speech: String::new(),
-        context_translation: String::new(),
-        context_explanation: String::new(),
-        general_definition: String::new(),
-        context_sentence_translation: translation,
-        source: "llm".to_string(),
-        llm_error_message: String::new(),
-        fallback_error_message: String::new(),
-        is_complete_failure: false,
-    })
+    llm.translate_sentence_streaming(&sentence, on_progress)
+        .await
 }
 
 // ── Vocabulary API ───────────────────────────────────────────────────────────

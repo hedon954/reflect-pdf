@@ -40,6 +40,25 @@ pub struct TranslationRequest {
     pub sentence: String,
 }
 
+/// One fragment in a sentence-translation breakdown. Returned as part of
+/// `TranslationResult.sentence_breakdown` for long / complex sentences in
+/// sentence mode. Word mode and short sentences leave `sentence_breakdown`
+/// empty and never produce these.
+#[derive(Debug, Clone, Default, uniffi::Record, serde::Serialize, serde::Deserialize)]
+pub struct SentenceChunk {
+    /// English fragment, exactly as in the source sentence.
+    pub original: String,
+    /// Translation of `original` in the target language.
+    pub translation: String,
+    /// Why this fragment is translated this way (word choices / context).
+    pub explanation: String,
+    /// Optional grammar analysis (in target language). Empty when the fragment
+    /// has no grammatically noteworthy structure — UI hides this section in
+    /// that case.
+    #[serde(default)]
+    pub grammar: String,
+}
+
 #[derive(Debug, Clone, Default, uniffi::Record, serde::Serialize, serde::Deserialize)]
 pub struct TranslationResult {
     pub word: String,
@@ -64,4 +83,8 @@ pub struct TranslationResult {
     /// The UI should display both errors and indicate complete failure.
     #[serde(default)]
     pub is_complete_failure: bool,
+    /// Per-fragment breakdown for sentence translation. Empty for word mode
+    /// or for short / simple sentences. Filled at end of stream by the LLM.
+    #[serde(default)]
+    pub sentence_breakdown: Vec<SentenceChunk>,
 }

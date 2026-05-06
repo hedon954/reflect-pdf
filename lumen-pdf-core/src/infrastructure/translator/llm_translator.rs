@@ -1,11 +1,11 @@
 use crate::domain::translation::{
-    entity::TranslationResult,
+    entity::{SentenceChunk, TranslationResult},
     repository::{StreamProgress, Translator},
 };
 use crate::error::LumenError;
 use crate::infrastructure::translator::http_client::shared_client;
 use crate::infrastructure::translator::streaming::{
-    extract_complete_string_fields, SseAccumulator,
+    extract_complete_string_fields, extract_streaming_string_value, SseAccumulator,
 };
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -54,18 +54,33 @@ Respond with ONLY valid JSON in this exact format:
 
     fn build_sentence_prompt(&self, sentence: &str) -> String {
         format!(
-            r#"You are a professional translator. Translate the following English text to {lang}.
+            r#"You are a professional translator and language tutor. Translate the following English text to {lang} and, if it is a long or complex sentence, also break it down so the reader can understand each fragment.
 
 Text: "{sentence}"
 
 Rules:
-1. Provide a natural, fluent translation
-2. Preserve the meaning and tone of the original
-3. If the text contains OCR errors or broken words, fix them in your translation
+1. Provide a natural, fluent translation in `translation`.
+2. Preserve meaning and tone of the original; fix OCR errors / broken words if present.
+3. Decide whether the sentence is "long or complex":
+   - SHORT / SIMPLE (≤10 words, no clauses, plain SVO) → set `breakdown` to an empty array `[]`.
+   - LONG / COMPLEX (multiple clauses, inversion, parallel structure, complex adverbials, etc.) → split it into 2–5 logical fragments.
+4. For each fragment in `breakdown`, output an object with EXACTLY these fields:
+   - `original`: the English fragment, copied verbatim from the source.
+   - `translation`: that fragment's translation in {lang}.
+   - `explanation`: in {lang}, briefly explain word choices / contextual meaning. ≤2 sentences.
+   - `grammar`: ONLY fill this when the fragment contains a grammatically noteworthy structure (subordinate clause, inversion, subjunctive mood, parallel structure, participle clause, nested complex structures, etc.). Leave it as an EMPTY STRING for plain SVO fragments. Be concise — 1 to 3 sentences in {lang}, naming the structure and explaining its role.
 
 Respond with ONLY valid JSON in this exact format:
 {{
-  "translation": "your translation here"
+  "translation": "<full translation in {lang}>",
+  "breakdown": [
+    {{
+      "original": "<English fragment>",
+      "translation": "<{lang} translation of the fragment>",
+      "explanation": "<{lang} explanation>",
+      "grammar": "<{lang} grammar analysis OR empty string>"
+    }}
+  ]
 }}"#,
             sentence = sentence,
             lang = self.config.target_language,
@@ -73,7 +88,12 @@ Respond with ONLY valid JSON in this exact format:
     }
 
     /// Translate a full sentence without word-level analysis (non-streaming).
-    pub async fn translate_sentence(&self, sentence: &str) -> Result<String, LumenError> {
+    /// Returns a `TranslationResult` with `context_sentence_translation` and
+    /// (when applicable) `sentence_breakdown` filled in.
+    pub async fn translate_sentence(
+        &self,
+        sentence: &str,
+    ) -> Result<TranslationResult, LumenError> {
         let body = self.build_sentence_request(sentence, false);
         let url = self.completions_url();
 
@@ -106,42 +126,45 @@ Respond with ONLY valid JSON in this exact format:
             .map(|c| c.message.content)
             .unwrap_or_default();
 
-        #[derive(Deserialize)]
-        struct SentenceTranslationJson {
-            translation: Option<String>,
-        }
-        let parsed: SentenceTranslationJson =
+        let parsed: SentencePromptJson =
             serde_json::from_str(&content).map_err(|e| LumenError::SerializationError {
                 message: e.to_string(),
             })?;
 
-        Ok(parsed.translation.unwrap_or_default())
+        Ok(parsed.into_result(sentence))
     }
 
-    /// Streaming sentence translation. The callback receives partial results
-    /// as soon as the `translation` field has any complete content; the final
-    /// `Ok` value contains the same string as the last emitted update.
+    /// Streaming sentence translation.
+    ///
+    /// During the stream, `on_progress` is invoked **whenever a new character
+    /// of the `translation` field arrives** — this gives the UI a real
+    /// "watch the translation get written" effect (vs v1.0.4 which only
+    /// emitted once the closing quote arrived).
+    ///
+    /// At end of stream, a strict JSON parse populates `sentence_breakdown`
+    /// from the LLM response. The fully populated `TranslationResult` is
+    /// returned and is also emitted as the final progress update.
     pub async fn translate_sentence_streaming(
         &self,
         sentence: &str,
         mut on_progress: StreamProgress,
-    ) -> Result<String, LumenError> {
+    ) -> Result<TranslationResult, LumenError> {
         let body = self.build_sentence_request(sentence, true);
         let url = self.completions_url();
 
         let raw_buf = self
             .stream_completion(&url, &body, |raw, last_emitted| {
-                let fields = extract_complete_string_fields(raw);
-                let mut map: HashMap<String, String> = HashMap::new();
-                for (k, v) in fields {
-                    map.insert(k, v);
-                }
-                let translation = map.remove("translation").unwrap_or_default();
-                if !translation.is_empty() && translation != *last_emitted {
-                    *last_emitted = translation.clone();
+                // Stream the `translation` field character by character. Other
+                // fields (`breakdown`) only appear at the end and are handled
+                // after the stream closes.
+                let Some(current) = extract_streaming_string_value(raw, "translation") else {
+                    return;
+                };
+                if current != *last_emitted {
+                    *last_emitted = current.clone();
                     on_progress(TranslationResult {
                         word: sentence.to_string(),
-                        context_sentence_translation: translation,
+                        context_sentence_translation: current,
                         source: "llm".to_string(),
                         ..Default::default()
                     });
@@ -149,18 +172,18 @@ Respond with ONLY valid JSON in this exact format:
             })
             .await?;
 
-        // Final, authoritative parse: the streaming extractor is intentionally
-        // permissive (string fields only). We still want a strict end-of-stream
-        // parse so the caller gets a guaranteed-valid translation string.
-        #[derive(Deserialize)]
-        struct SentenceTranslationJson {
-            translation: Option<String>,
-        }
-        let parsed: SentenceTranslationJson =
+        // Final, authoritative parse: the streaming extractor is permissive
+        // (string-only). At end of stream we run a strict JSON parse so we
+        // can extract `breakdown` and guarantee a clean final result.
+        let parsed: SentencePromptJson =
             serde_json::from_str(&raw_buf).map_err(|e| LumenError::SerializationError {
                 message: e.to_string(),
             })?;
-        Ok(parsed.translation.unwrap_or_default())
+        let final_result = parsed.into_result(sentence);
+        // Emit a terminal progress event so the UI gets the breakdown without
+        // having to wait for the outer caller to wire it.
+        on_progress(final_result.clone());
+        Ok(final_result)
     }
 
     fn completions_url(&self) -> String {
@@ -290,6 +313,7 @@ fn map_to_translation_result(
         llm_error_message: String::new(),
         fallback_error_message: String::new(),
         is_complete_failure: false,
+        sentence_breakdown: Vec::new(),
     }
 }
 
@@ -342,6 +366,53 @@ struct LlmTranslationJson {
     context_explanation: Option<String>,
     general_definition: Option<String>,
     context_sentence_translation: Option<String>,
+}
+
+/// Wire format the LLM produces in sentence mode: a translation plus an
+/// optional breakdown array for long / complex sentences.
+#[derive(Deserialize)]
+struct SentencePromptJson {
+    translation: Option<String>,
+    #[serde(default)]
+    breakdown: Vec<SentenceChunkJson>,
+}
+
+#[derive(Deserialize)]
+struct SentenceChunkJson {
+    original: Option<String>,
+    translation: Option<String>,
+    explanation: Option<String>,
+    #[serde(default)]
+    grammar: String,
+}
+
+impl SentencePromptJson {
+    /// Materialize into a fully-populated `TranslationResult` for sentence
+    /// mode. `original_sentence` is stored in `word` so callers can correlate
+    /// the result with the user's selection (consistent with v1.0.4).
+    fn into_result(self, original_sentence: &str) -> TranslationResult {
+        let breakdown: Vec<SentenceChunk> = self
+            .breakdown
+            .into_iter()
+            .map(|c| SentenceChunk {
+                original: c.original.unwrap_or_default(),
+                translation: c.translation.unwrap_or_default(),
+                explanation: c.explanation.unwrap_or_default(),
+                grammar: c.grammar,
+            })
+            // Drop entirely-empty chunks defensively in case the model emits
+            // a stray `{}` placeholder when it decides not to break down.
+            .filter(|c| !c.original.is_empty() || !c.translation.is_empty())
+            .collect();
+
+        TranslationResult {
+            word: original_sentence.to_string(),
+            context_sentence_translation: self.translation.unwrap_or_default(),
+            source: "llm".to_string(),
+            sentence_breakdown: breakdown,
+            ..Default::default()
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -404,6 +475,7 @@ impl Translator for LlmTranslator {
             llm_error_message: String::new(),
             fallback_error_message: String::new(),
             is_complete_failure: false,
+            sentence_breakdown: Vec::new(),
         })
     }
 
@@ -480,6 +552,7 @@ impl Translator for LlmTranslator {
             llm_error_message: String::new(),
             fallback_error_message: String::new(),
             is_complete_failure: false,
+            sentence_breakdown: Vec::new(),
         })
     }
 }

@@ -190,6 +190,7 @@ struct TranslationBubble: View {
             || !r.contextExplanation.isEmpty
             || !r.generalDefinition.isEmpty
             || !r.contextSentenceTranslation.isEmpty
+            || !r.sentenceBreakdown.isEmpty
             || r.isCompleteFailure
     }
 
@@ -298,7 +299,8 @@ struct TranslationBubble: View {
             && result.phonetic.isEmpty
 
         if isSentenceOnly {
-            // Sentence translation mode: show original and translation only
+            // Sentence translation mode: show original, translation, and (for
+            // long / complex sentences) the per-fragment breakdown.
             VStack(alignment: .leading, spacing: 12) {
                 BubbleSection("原文") {
                     Text(ContextSentenceFormatting.displayParagraph(request.word))
@@ -314,6 +316,15 @@ struct TranslationBubble: View {
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                if !result.sentenceBreakdown.isEmpty {
+                    BubbleSection("拆解分析") {
+                        VStack(alignment: .leading, spacing: 14) {
+                            ForEach(Array(result.sentenceBreakdown.enumerated()), id: \.offset) { idx, chunk in
+                                breakdownChunkView(index: idx + 1, chunk: chunk)
+                            }
+                        }
                     }
                 }
             }
@@ -359,6 +370,59 @@ struct TranslationBubble: View {
                 }
             }
             .padding(14)
+        }
+    }
+
+    // MARK: - Breakdown chunk (sentence mode)
+
+    @ViewBuilder
+    private func breakdownChunkView(index: Int, chunk: SentenceChunk) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(index).")
+                    .font(.callout.bold())
+                    .foregroundStyle(.tertiary)
+                VStack(alignment: .leading, spacing: 4) {
+                    if !chunk.original.isEmpty {
+                        Text(chunk.original)
+                            .font(.system(.callout, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if !chunk.translation.isEmpty {
+                        Text(chunk.translation)
+                            .font(.callout)
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            if !chunk.explanation.isEmpty {
+                Text(chunk.explanation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 18)
+            }
+            if !chunk.grammar.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Text("语法")
+                        .font(.caption2.bold())
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.blue.opacity(0.15), in: Capsule())
+                        .foregroundStyle(.blue)
+                    Text(chunk.grammar)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.leading, 18)
+            }
         }
     }
 
